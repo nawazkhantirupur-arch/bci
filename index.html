@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BCI EXPRESS - Billing Invoice</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --navy:#0d2050; --red:#e11d2e; --gold:#f5b800; --yellow:#fde047;
+  --bg:#f4f6fb; --card:#ffffff; --text:#12182b; --muted:#5b6478; --border:#e2e6f0;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0b0f1c; --card:#141b30; --text:#eef1fb; --muted:#9aa3bd; --border:#26304a; }
+}
+:root[data-theme="dark"]{ --bg:#0b0f1c; --card:#141b30; --text:#eef1fb; --muted:#9aa3bd; --border:#26304a; }
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;min-height:100%;}
+.wrap{max-width:960px;margin:0 auto;padding:16px;}
+.topbar{position:sticky;top:0;top:env(safe-area-inset-top,0px);z-index:10;background:linear-gradient(90deg,var(--navy),#1a3a8f);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--gold);}
+.topbar b{font-size:1.05rem;} .topbar span{color:var(--yellow);}
+.btn{cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-weight:600;font-size:.9rem;}
+.btn-red{background:var(--red);color:#fff;} .btn-navy{background:var(--navy);color:#fff;}
+.btn-gold{background:var(--gold);color:var(--navy);} .btn-ghost{background:transparent;color:#fff;border:1px solid #fff5;}
+.btn-sm{padding:6px 10px;font-size:.8rem;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin:14px 0;}
+h2{color:var(--navy);margin-top:0;} :root[data-theme="dark"] h2{color:var(--yellow);}
+label{display:block;font-size:.82rem;color:var(--muted);margin:10px 0 4px;}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:.95rem;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;}
+table{width:100%;border-collapse:collapse;font-size:.8rem;}
+th,td{border:1px solid var(--border);padding:5px 6px;text-align:center;white-space:nowrap;}
+th{background:var(--navy);color:#fff;}
+.tbl-wrap{overflow-x:auto;max-width:100%;}
+.tc{font-size:.8rem;color:var(--muted);line-height:1.5;}
+.tc b{color:var(--text);}
+.box{border:1px dashed var(--border);border-radius:8px;padding:8px;margin:8px 0;}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--gold);color:var(--navy);font-weight:700;font-size:.75rem;}
+.admin-pill{background:var(--red);color:#fff;}
+.err{color:var(--red);font-size:.85rem;} .ok{color:#159957;font-size:.85rem;}
+.hide{display:none!important;}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.invoice-total{font-size:1.3rem;font-weight:800;color:var(--navy);} :root[data-theme="dark"] .invoice-total{color:var(--yellow);}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+nav.tabs button{flex:1;min-width:110px;}
+.tabs .active{outline:2px solid var(--gold);}
+.ratecell{width:64px;padding:4px;text-align:center;}
+.lock-note{background:#fff4e0;border:1px solid var(--gold);border-radius:8px;padding:8px 12px;font-size:.8rem;color:#7a5200;margin-bottom:10px;}
+:root[data-theme="dark"] .lock-note{background:#2a2408;color:var(--yellow);}
+.chk{display:flex;gap:6px;align-items:center;margin:4px 0;}
+.chk input{width:auto;}
+#toastWrap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 60px);right:14px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--navy);color:#fff;border-left:5px solid var(--gold);padding:10px 14px;border-radius:8px;font-size:.82rem;box-shadow:0 6px 18px rgba(0,0,0,.3);max-width:280px;animation:toastin .25s ease-out;}
+@keyframes toastin{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.bell-item{padding:8px 10px;border-bottom:1px solid var(--border);}
+.bell-item.unread{background:rgba(245,184,0,.12);}
+.bell-item b{display:block;}
+.bell-empty{padding:16px;text-align:center;color:var(--muted);font-size:.8rem;}
+@media print{
+  .topbar,.tabs,.no-print{display:none!important;}
+  body{background:#fff;color:#000;}
+  .card{border:1px solid #000;}
+}
+
+.topbar .pill{color:#0d2050}.topbar .pill.admin-pill{color:#fff}.topbar .btn-gold span{color:inherit}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <b>BCI EXPRESS<span> | Invoice System</span></b>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="bellWrap" class="no-print hide" style="position:relative;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleBell()" style="font-size:1.1rem;position:relative;">🔔<span id="bellBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:999px;font-size:.65rem;padding:1px 5px;font-weight:700;">0</span></button>
+      <div id="bellPanel" class="hide" style="position:absolute;right:0;top:36px;width:300px;max-height:360px;overflow-y:auto;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:20;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);">
+          <b style="font-size:.85rem;">Notifications</b>
+          <button class="btn btn-navy btn-sm" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div id="bellList" style="font-size:.78rem;"></div>
+      </div>
+    </div>
+    <div id="walletWrap" class="no-print hide"><button class="btn btn-gold btn-sm" onclick="openWallet()">💰 <span id="walletBal">₹0</span></button></div>
+    <div id="userBox" class="no-print"></div>
+  </div>
+</div>
+
+<div id="walletModal" class="hide no-print" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:420px;width:100%;max-height:90vh;overflow-y:auto;">
+    <h2>💰 Wallet</h2>
+    <p>Current Balance: <b id="walletBalBig">₹0</b></p>
+    <label>Recharge Amount (₹)</label><input id="rechargeAmt" type="number" min="1" value="500">
+    <div class="row-actions">
+      <button class="btn btn-gold" onclick="startRazorpay()">Pay with Razorpay</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--text);border:1px solid var(--border);" onclick="closeWallet()">Close</button>
+    </div>
+    <p id="walletErr" class="err"></p>
+    <h3 style="margin-top:16px;">Recent Transactions</h3>
+    <div class="tbl-wrap" id="walletTxWrap"></div>
+  </div>
+</div>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<div id="toastWrap" class="no-print"></div>
+
+<div class="wrap">
+
+<!-- LOGIN -->
+<div id="loginView" class="card hide">
+  <h2>🔐 Login</h2>
+  <label>Username or Email</label><input id="loginUser" placeholder="e.g. admin">
+  <label>Password</label><input id="loginPass" type="password" placeholder="password">
+  <div class="row-actions"><button class="btn btn-red" onclick="doLogin()">Login</button></div>
+  <p id="loginErr" class="err"></p>
+  <p class="tc">புதிய Vendor/User-ஆ? <a href="#" onclick="toggleRegister(true);return false;">Create Account</a></p>
+</div>
+
+<!-- FIRST-TIME SETUP -->
+<div id="setupView" class="card hide">
+  <h2>🛠️ First-time Setup</h2>
+  <p class="tc">இது முதல் முறை. Admin account உருவாக்கவும். EdgeOne Environment Variables-ல் நீங்கள் வைத்த <b>SETUP_KEY</b> தேவை.</p>
+  <label>Setup Key</label><input id="setKey" type="password" autocomplete="off">
+  <div class="grid2"><div><label>Admin Username</label><input id="setUser" placeholder="a-z, 0-9, _ (3-32)"></div><div><label>Email (optional)</label><input id="setEmail" type="email"></div></div>
+  <label>Admin Password (min 8)</label><input id="setPass" type="password" autocomplete="new-password">
+  <div class="row-actions"><button class="btn btn-red" onclick="doSetup()">Create Admin</button></div>
+  <p id="setErr" class="err"></p>
+</div>
+
+<!-- REGISTER (self-signup) -->
+<div id="registerView" class="card hide">
+  <h2>📝 Create Account</h2>
+  <p class="tc">Username/Password-ஐ நீங்களே தேர்வு செய்யலாம். Account உருவானதும் <b>Admin approve செய்த பின்னரே</b> login செய்ய முடியும்.</p>
+  <div class="grid2"><div><label>Username</label><input id="regUser" placeholder="a-z, 0-9, _ (3-32)"></div><div><label>Email (optional)</label><input id="regEmail" type="email"></div></div>
+  <div class="grid2"><div><label>Password</label><input id="regPass" type="password" placeholder="min 8 characters"></div><div><label>Confirm Password</label><input id="regPass2" type="password"></div></div>
+  <label>Location / Branch</label><input id="regLoc" placeholder="e.g. Tirupur">
+  <div class="row-actions"><button class="btn btn-red" onclick="doRegister()">Create Account</button><button class="btn btn-ghost" style="color:var(--text);border:1px solid var(--border);" onclick="toggleRegister(false)">Back to Login</button></div>
+  <p id="regErr" class="err"></p>
+  <p id="regOk" class="ok"></p>
+</div>
+
+<!-- APP -->
+<div id="appView" class="hide">
+  <nav class="tabs no-print">
+    <button class="btn btn-navy" data-tab="invoice" onclick="showTab('invoice')">🧾 New Invoice</button>
+    <button class="btn btn-navy" data-tab="customers" onclick="showTab('customers')">👤 Customers</button>
+    <button class="btn btn-navy" data-tab="b2b" onclick="showTab('b2b')">🚛 B2B Freight</button>
+    <button class="btn btn-navy" data-tab="b2ccourier" onclick="showTab('b2ccourier')">🛍️ B2C Courier</button>
+    <button class="btn btn-navy" data-tab="history" onclick="showTab('history')">📋 Invoices</button>
+    <button class="btn btn-navy" id="tabUsersBtn" data-tab="users" onclick="showTab('users')">👥 Vendors/Users</button>
+    <button class="btn btn-navy" data-tab="partners" onclick="showTab('partners')">🚚 Courier Partners</button>
+    <button class="btn btn-navy" id="tabZoneBtn" data-tab="zonemaster" onclick="showTab('zonemaster')">🗺️ Zone Master</button>
+    <button class="btn btn-navy" id="tabRateBtn" data-tab="ratemaster" onclick="showTab('ratemaster')">💰 Rate Master</button>
+    <button class="btn btn-navy" data-tab="rates" onclick="showTab('rates')">📊 Rate Card</button>
+  </nav>
+
+  <!-- INVOICE TAB -->
+  <div id="tab-invoice">
+    <div class="card no-print">
+      <h2>New Invoice</h2>
+      <label>Billing Type</label>
+      <div class="grid2">
+        <div><button type="button" class="btn" id="typeB2C" onclick="setCustType('B2C')" style="width:100%;background:var(--gold);color:var(--navy);">🧍 B2C (Retail Customer)</button></div>
+        <div><button type="button" class="btn" id="typeB2B" onclick="setCustType('B2B')" style="width:100%;background:var(--border);color:var(--text);">🏢 B2B BULK (Corporate/Vendor)</button></div>
+      </div>
+      <label>Search Existing Customer (optional)</label>
+      <input id="custSearch" list="custList" placeholder="Type name/mobile to auto-fill" oninput="pickCustomer()">
+      <datalist id="custList"></datalist>
+      <div class="grid2"><div><label>Customer Name</label><input id="custName"></div><div><label>Mobile</label><input id="custMobile"></div></div>
+      <label>Customer Address</label><input id="custAddr">
+      <div id="gstinWrap" class="hide"><label>GSTIN (for B2B Bulk invoice)</label><input id="custGstin"></div>
+      <div class="grid2">
+        <div><label>Pickup Pincode</label><input id="pinFrom" inputmode="numeric" maxlength="6" placeholder="6 digit pincode" oninput="applyPin('inv')"></div>
+        <div><label>Destination Pincode</label><input id="pinTo" inputmode="numeric" maxlength="6" placeholder="6 digit pincode" oninput="applyPin('inv')"></div>
+      </div>
+      <div id="pinInfo" class="tc box"></div>
+      <div class="grid2"><div><label>Pickup Zone</label><select id="pickupZone"></select></div><div><label>Destination Zone</label><select id="destZone"></select></div></div>
+      <div class="grid2"><div><label>Weight (Kg)</label><input id="weightKg" type="number" min="0.1" step="0.1" value="1"></div><div><label>Courier Partner</label><select id="partnerSel"></select></div></div>
+      <label>No. of Pieces</label><input id="pieces" type="number" min="1" value="1">
+      <div id="calcBox" class="card" style="background:var(--bg);margin-top:14px;">
+        <div>Rate / Kg: <b id="rPerKg">-</b></div><div>Subtotal: <b id="rSub">-</b></div><div>GST (18%): <b id="rGst">-</b></div>
+        <div class="invoice-total">Total: ₹<span id="rTotal">0</span></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-gold" onclick="calcInvoice()">Calculate</button><button class="btn btn-red" onclick="saveInvoice()">Save & Generate Invoice</button></div>
+      <p id="invErr" class="err"></p>
+    </div>
+    <div id="printableInvoice"></div>
+  </div>
+
+  <!-- CUSTOMERS TAB -->
+  <div id="tab-customers" class="hide">
+    <div class="card">
+      <h2>Customer Master (B2C / B2B Bulk)</h2>
+      <div class="grid2"><div><label>Name</label><input id="ncName"></div><div><label>Mobile</label><input id="ncMobile"></div></div>
+      <label>Address</label><input id="ncAddr">
+      <div class="grid2">
+        <div><label>Type</label><select id="ncType"><option value="B2C">B2C - Retail</option><option value="B2B">B2B - Bulk/Corporate</option></select></div>
+        <div><label>GSTIN (B2B)</label><input id="ncGstin" placeholder="optional"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-navy" onclick="addCustomer()">+ Add / Update Customer</button></div>
+      <p id="custErr" class="err"></p>
+      <div class="tbl-wrap"><table id="customerTable"><thead><tr><th>Name</th><th>Mobile</th><th>Address</th><th>Type</th><th>GSTIN</th><th class="no-print">Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- B2B FREIGHT TAB -->
+  <div id="tab-b2b" class="hide">
+    <div class="card no-print">
+      <h2>🚛 B2B Freight Calculator &amp; Invoice</h2>
+      <p class="tc" id="b2bRateNote"></p>
+      <label>Search Existing Customer (optional)</label>
+      <input id="b2bSearch" list="custList" placeholder="Type name/mobile to auto-fill" oninput="pickB2BCustomer()">
+      <div class="grid2"><div><label>Customer / Company Name</label><input id="b2bName"></div><div><label>Mobile</label><input id="b2bMobile"></div></div>
+      <label>Address</label><input id="b2bAddr">
+      <label>GSTIN</label><input id="b2bGstin">
+      <div class="grid2">
+        <div><label>Pickup Pincode</label><input id="b2bPinFrom" inputmode="numeric" maxlength="6" oninput="applyPin('b2b')"></div>
+        <div><label>Destination Pincode</label><input id="b2bPinTo" inputmode="numeric" maxlength="6" oninput="applyPin('b2b')"></div>
+      </div>
+      <div id="b2bPinInfo" class="tc box"></div>
+      <div class="grid3">
+        <div><label>Pickup Zone</label><select id="b2bPickup"></select></div>
+        <div><label>Destination Zone</label><select id="b2bDest"></select></div>
+        <div><label>Special Lane</label><select id="b2bLane"></select></div>
+      </div>
+      <label>Packages (Qty / L / B / H cm / weight per pkg kg)</label>
+      <div class="tbl-wrap"><table><thead><tr><th>Qty</th><th>L</th><th>B</th><th>H</th><th>Wt/pkg</th><th></th></tr></thead><tbody id="b2bPkgBody"></tbody></table></div>
+      <div class="row-actions"><button type="button" class="btn btn-navy btn-sm" onclick="addPkgRow()">+ Add package row</button></div>
+      <div class="grid3">
+        <div><label>Declared Value (₹)</label><input id="b2bDeclared" type="number" min="0" value="0"></div>
+        <div><label>Current Diesel Price (₹/L)</label><input id="b2bDiesel" type="number" step="0.01"></div>
+        <div><label>GST Type</label><select id="b2bGstType"><option value="IGST">IGST 18%</option><option value="CGST_SGST">CGST 9%+SGST 9%</option></select></div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label class="chk"><input type="checkbox" id="b2bFov" checked> FOV/ROV (Owner's risk)</label>
+          <label class="chk"><input type="checkbox" id="b2bOda"> ODA pincode</label>
+          <label class="chk"><input type="checkbox" id="b2bAppt"> Appointment / Mall delivery</label>
+          <label class="chk"><input type="checkbox" id="b2bCsd"> CSD / Army delivery</label>
+        </div>
+        <div>
+          <label class="chk"><input type="checkbox" id="b2bGreen"> Green tax</label>
+          <label class="chk"><input type="checkbox" id="b2bTopay"> To-Pay</label>
+          <label class="chk"><input type="checkbox" id="b2bCod"> COD / Value to collect</label>
+          <input id="b2bCodAmt" type="number" min="0" placeholder="COD amount (₹)">
+        </div>
+      </div>
+      <label>Extra demurrage days</label><input id="b2bDemDays" type="number" min="0" value="0">
+      <div id="b2bMarginWrap" class="hide">
+        <div class="lock-note">🔒 Admin மட்டும் தெரியும்.</div>
+        <label>Margin % (10-20)</label><input id="b2bMargin" type="number" min="10" max="20" step="0.5">
+      </div>
+      <div class="row-actions"><button class="btn btn-gold" onclick="calcB2B()">Calculate</button><button class="btn btn-red" onclick="saveB2BInvoice()">Save &amp; Generate B2B Invoice</button></div>
+      <p id="b2bErr" class="err"></p>
+    </div>
+    <div class="card no-print" id="b2bResultCard" style="display:none;"><h2>Freight Breakup</h2><div id="b2bResult" class="tbl-wrap"></div></div>
+  </div>
+
+  <!-- B2C COURIER TAB -->
+  <div id="tab-b2ccourier" class="hide">
+    <div class="card no-print">
+      <h2>🛍️ B2C Courier - Multi-Partner Rate Calculator &amp; Invoice</h2>
+      <label>Search Existing Customer (optional)</label>
+      <input id="cc_search" list="custList" placeholder="Type name/mobile to auto-fill" oninput="pickCCCustomer()">
+      <div class="grid2"><div><label>Customer Name</label><input id="cc_name"></div><div><label>Mobile</label><input id="cc_mobile"></div></div>
+      <label>Customer Address</label><input id="cc_addr">
+      <div class="grid2">
+        <div><label>Pickup Pincode</label><input id="cc_from" inputmode="numeric" maxlength="6" oninput="updateCCInfo()"></div>
+        <div><label>Destination Pincode</label><input id="cc_to" inputmode="numeric" maxlength="6" oninput="updateCCInfo()"></div>
+      </div>
+      <div id="cc_info" class="tc box"></div>
+      <div class="grid2">
+        <div><label>Delivery Category</label><select id="cc_cat" onchange="updateCCInfo()"><option value="auto">Auto (from pincodes)</option><option value="0">City</option><option value="1">Region</option><option value="2">Metro</option><option value="3">ROI</option><option value="4">Special</option></select></div>
+        <div><label>Actual Weight (kg)</label><input id="cc_wt" type="number" min="0" step="0.01"></div>
+      </div>
+      <label>Dimensions cm (optional)</label>
+      <div class="grid3"><input id="cc_l" type="number" min="0" placeholder="L"><input id="cc_b" type="number" min="0" placeholder="B"><input id="cc_h" type="number" min="0" placeholder="H"></div>
+      <div class="grid3">
+        <div><label>Order Value (₹)</label><input id="cc_val" type="number" min="0" value="0"></div>
+        <div><label>Payment Mode</label><select id="cc_pay"><option value="PREPAID">Prepaid</option><option value="COD">COD</option></select></div>
+        <div><label>GST Type</label><select id="cc_gst"><option value="IGST">IGST 18%</option><option value="CGST_SGST">CGST 9%+SGST 9%</option></select></div>
+      </div>
+      <div id="cc_mw" class="hide">
+        <div class="lock-note">🔒 Admin மட்டும் தெரியும்.</div>
+        <label>Margin % (10-20)</label><input id="cc_margin" type="number" min="10" max="20" step="0.5">
+      </div>
+      <div class="row-actions"><button class="btn btn-gold" onclick="calcCC()">Compare Couriers</button><button class="btn btn-red" onclick="saveCCInvoice()">Save &amp; Generate Invoice</button></div>
+      <p id="cc_err" class="err"></p>
+    </div>
+    <div class="card no-print" id="cc_resCard" style="display:none;"><h2>Courier Comparison</h2><div id="cc_res" class="tbl-wrap"></div></div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div id="tab-history" class="hide">
+    <div class="card">
+      <h2>Invoice History</h2>
+      <div class="row-actions no-print" id="histFilter">
+        <button class="btn btn-gold btn-sm" onclick="filterHistory('ALL',event)">All</button>
+        <button class="btn btn-navy btn-sm" onclick="filterHistory('B2C',event)">B2C</button>
+        <button class="btn btn-navy btn-sm" onclick="filterHistory('B2B',event)">B2B Bulk</button>
+      </div>
+      <div class="tbl-wrap"><table id="histTable"><thead><tr><th>Inv#</th><th>Date</th><th>Customer</th><th>Type</th><th>Route</th><th>Wt</th><th>Partner</th><th>Total ₹</th><th>By</th><th class="no-print">Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div id="tab-users" class="hide">
+    <div class="card">
+      <div class="lock-note">🔒 புதிய Vendors Create Account பண்ணி இங்கே வந்தால் Approve/Reject செய்யவும்.</div>
+      <h2>⏳ Pending Approvals</h2>
+      <div class="tbl-wrap"><table id="pendingTable"><thead><tr><th>Username</th><th>Email</th><th>Location</th><th>Requested On</th><th class="no-print">Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2>Vendors / Users</h2>
+      <div class="grid2"><div><label>Username</label><input id="nuUser"></div><div><label>Password</label><input id="nuPass"></div></div>
+      <div class="grid2">
+        <div><label>Role</label><select id="nuRole"><option value="vendor">Vendor</option><option value="admin">Admin</option></select></div>
+        <div><label>Location / Branch</label><input id="nuLocation"></div>
+      </div>
+      <label>Email (optional)</label><input id="nuEmail" type="email">
+      <div class="row-actions"><button class="btn btn-navy" onclick="addUser()">+ Add User</button></div>
+      <div class="tbl-wrap"><table id="userTable"><thead><tr><th>Username</th><th>Email</th><th>Password</th><th>Role</th><th>Status</th><th>Location</th><th>Wallet ₹</th><th>Created On</th><th>Last Login</th><th class="no-print">Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PARTNERS TAB -->
+  <div id="tab-partners" class="hide">
+    <div class="card">
+      <h2>Courier Partners (Multi-Modal)</h2>
+      <div class="grid2">
+        <div><label>Partner Name</label><input id="npName"></div>
+        <div><label>Mode</label><select id="npMode"><option>Road</option><option>Air</option><option>Rail</option><option>Cargo/Sea</option></select></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-navy" onclick="addPartner()">+ Add Partner</button></div>
+      <div class="tbl-wrap"><table id="partnerTable"><thead><tr><th>Partner</th><th>Mode</th><th class="no-print">Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ZONE MASTER TAB -->
+  <div id="tab-zonemaster" class="hide">
+    <div class="card">
+      <div class="lock-note">🔒 Admin மட்டும் Manage செய்ய முடியும்.</div>
+      <h2>Zone Master</h2>
+      <div class="grid2"><div><label>Zone Code</label><input id="nzCode"></div><div><label>States / UTs Covered</label><input id="nzStates"></div></div>
+      <div class="row-actions"><button class="btn btn-navy" onclick="addZone()">+ Add / Update Zone</button></div>
+      <p id="zoneErr" class="err"></p>
+      <div class="tbl-wrap"><table id="zoneMasterTable"><thead><tr><th>Zone Code</th><th>States / UTs</th><th class="no-print">Action</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="lock-note">🔒 Admin மட்டும் — Pincode → Zone State Mapping.</div>
+      <h2>State → Zone Mapping (Pincode)</h2>
+      <div class="tbl-wrap" id="stateZoneWrap"></div>
+      <div class="row-actions"><button class="btn btn-red" onclick="saveStateZone()">💾 Save State-Zone Mapping</button></div>
+      <p id="stateZoneMsg" class="ok"></p>
+    </div>
+  </div>
+
+  <!-- RATE MASTER TAB -->
+  <div id="tab-ratemaster" class="hide">
+    <div class="card">
+      <div class="lock-note">🔒 Admin மட்டும் Manage செய்ய முடியும்.</div>
+      <h2>Rate Master (₹ / Kg)</h2>
+      <div class="row-actions">
+        <button class="btn btn-gold btn-sm" id="rmStdBtn" onclick="switchRateMaster('std')">🧍 B2C Standard</button>
+        <button class="btn btn-navy btn-sm" id="rmBulkBtn" onclick="switchRateMaster('bulk')">🏢 B2B Bulk</button>
+        <button class="btn btn-navy btn-sm" id="rmB2bBtn" onclick="switchRateMaster('b2b')">🚛 B2B Freight (Delhivery)</button>
+      </div>
+      <div class="tbl-wrap" id="rateMasterWrap" style="margin-top:10px;"></div>
+      <div class="row-actions"><button class="btn btn-red" onclick="saveRateMaster()">💾 Save Rate Changes</button></div>
+      <p id="rateSavedMsg" class="ok"></p>
+    </div>
+    <div class="card">
+      <div class="lock-note">🔒 Admin மட்டும் — B2B Freight Charges Master.</div>
+      <h2>B2B Charges Master</h2>
+      <div id="b2bCfgWrap" class="grid2"></div>
+      <div class="row-actions"><button class="btn btn-red" onclick="saveB2BCfg()">💾 Save B2B Charges</button></div>
+      <p id="b2bCfgMsg" class="ok"></p>
+    </div>
+    <div class="card">
+      <div class="lock-note">🔒 Admin மட்டும் — B2C Courier Rate Master (Multi-partner).</div>
+      <h2>B2C Courier Rate Master</h2>
+      <div class="tbl-wrap" id="ccMasterWrap"></div>
+      <div class="row-actions"><button class="btn btn-navy btn-sm" onclick="addCCPartner()">+ Add Courier</button></div>
+      <h3>Settings</h3>
+      <label>Courier margin % (10-20)</label><input id="ccCfgMargin" type="number" min="10" max="20" step="0.5">
+      <div class="grid2"><div><label>Volumetric divisor</label><input id="ccCfgDiv" type="number" min="1"></div><div><label>Special destination states</label><input id="ccCfgSpecial"></div></div>
+      <div class="row-actions"><button class="btn btn-red" onclick="saveCCMaster()">💾 Save Courier Rates</button></div>
+      <p id="ccMasterMsg" class="ok"></p>
+    </div>
+    <div class="card">
+      <div class="lock-note">🔒 Admin மட்டும் — Delhivery API (Live Rate / Auto Manifest / Label). Keys EdgeOne <b>Environment Variables</b>-ல் மட்டும் சேர்க்கவும்.</div>
+      <h2>🚚 Delhivery API</h2>
+      <p id="dlhvStatus" class="tc">Checking...</p>
+      <p id="sysStatus" class="tc"></p>
+      <h3>Quick Live Rate Check</h3>
+      <div class="grid3">
+        <div><label>Origin Pincode</label><input id="dqOpin" maxlength="6"></div>
+        <div><label>Destination Pincode</label><input id="dqDpin" maxlength="6"></div>
+        <div><label>Weight (grams)</label><input id="dqWt" type="number" value="500"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Mode</label><select id="dqMode"><option value="S">Surface</option><option value="E">Express</option></select></div>
+        <div><label>Payment</label><select id="dqPay"><option value="Pre-paid">Pre-paid</option><option value="COD">COD</option></select></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-navy btn-sm" onclick="checkDelhiveryRate()">Check Live Rate</button></div>
+      <p id="dqResult" class="tc"></p>
+    </div>
+  </div>
+
+  <!-- RATE CARD (VIEW) -->
+  <div id="tab-rates" class="hide">
+    <div class="card"><h2>🧍 B2C Standard Rate Card (₹/Kg)</h2><div class="tbl-wrap" id="rateTableWrap"></div><p class="tc">+18% GST applicable.</p></div>
+    <div class="card"><h2>🏢 B2B Bulk Shipments Rate Card (₹/Kg)</h2><div class="tbl-wrap" id="bulkRateTableWrap"></div></div>
+    <div class="card"><h2>Zone Definitions</h2><div class="tbl-wrap" id="zoneDefWrap"></div></div>
+  </div>
+
+  <div class="card no-print">
+    <h2>Terms & Conditions</h2>
+    <p class="tc">1. Goods once booked cannot be cancelled.<br>2. All disputes are subject to Tirupur Jurisdiction only.<br>
+    3. Interest @ 24% p.a. will be charged on delayed payments.<br>4. Please make payments to BCI EXPRESS.COM bank account only.<br>5. GST @ 18% applicable on all rates.<br><br>
+    <b>Service Aggregator Disclaimer:</b> BCI EXPRESS.COM, a brand of BIG CART INDIA, acts solely as a logistics service aggregator and booking facilitator. Transportation, handling, storage, transit and delivery are performed by the respective courier/logistics partner; BCI EXPRESS.COM is not liable for any related claims, losses or damages.<br><br>
+    <b>Customer Acknowledgement:</b> By booking through BCI EXPRESS.COM, the customer agrees to the terms of the selected courier/logistics partner.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const API = '/api/';
+async function api(path, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type':'application/json','X-Requested-With':'bci'}, opts.headers||{});
+  opts.credentials = 'same-origin';
+  const res = await fetch(API+path, opts);
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){ throw (data && data.error) ? data.error : ('HTTP '+res.status); }
+  return data;
+}
+function apiGet(path){ return api(path); }
+function apiPost(path, body){ return api(path, {method:'POST', body:JSON.stringify(body||{})}); }
+
+let SESSION=null;
+let ZONES=[], ZONEDEF={}, RATES={}, BULK_RATES={}, B2B_ZONE={}, LANES={}, B2B_CFG={}, STATE_ZONE={}, CC_CFG={}, PARTNERS=[];
+let CUSTOMERS=[], USERS=[], CC_PARTNERS=[], INVOICES=[], NOTIFS=[];
+let custType='B2C', rmMode='std', histFilterType='ALL', CC_SEL='', CC_LAST=null, lastB2B=null;
+const GST=0.18;
+function rnd2(n){ return Math.round(n*100)/100; }
+function isAdmin(){ return SESSION && SESSION.role==='admin'; }
+function esc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ---------------- BOOT / AUTH ----------------
+async function boot(){
+  try{
+    const me = await apiGet('auth.php?action=me');
+    SESSION = me.user;
+  }catch(e){ SESSION=null; }
+  renderUserBox();
+  if(SESSION){
+    document.getElementById('loginView').classList.add('hide');
+    document.getElementById('appView').classList.remove('hide');
+    await loadAllData();
+    document.getElementById('tabUsersBtn').classList.toggle('hide', !isAdmin());
+    document.getElementById('tabZoneBtn').classList.toggle('hide', !isAdmin());
+    document.getElementById('tabRateBtn').classList.toggle('hide', !isAdmin());
+    document.getElementById('bellWrap').classList.toggle('hide', !isAdmin());
+    populateSelects(); buildRateTable(); renderCustomerTable(); setCustType('B2C');
+    renderUserTable(); renderPartnerTable(); renderHistory(); renderPendingTable(); loadWalletBalance();
+    if(isAdmin()){ pollNotifications(); setInterval(pollNotifications, 8000); }
+    showTab('invoice');
+  }else{
+    document.getElementById('loginView').classList.remove('hide');
+    document.getElementById('appView').classList.add('hide');
+    document.getElementById('bellWrap').classList.add('hide');
+    document.getElementById('walletWrap').classList.add('hide');
+    toggleRegister(false);
+    document.getElementById('walletWrap').classList.add('hide');
+    document.getElementById('walletWrap').classList.add('hide');
+    toggleRegister(false);
+    checkSetup();
+  }
+}
+async function loadAllData(){
+  const [kv, cust, cc] = await Promise.all([
+    apiGet('kv.php?action=all'), apiGet('customers.php?action=list'), apiGet('cc.php?action=list')
+  ]);
+  const d = kv.data;
+  ZONES=d.zones||[]; ZONEDEF=d.zonedef||{}; RATES=d.rates_std||{}; BULK_RATES=d.rates_bulk||{};
+  B2B_ZONE=d.b2b_zone||{}; LANES=d.b2b_lanes||{}; B2B_CFG=d.b2b_cfg||{}; STATE_ZONE=d.state_zone||{};
+  CC_CFG=d.cc_cfg||{}; PARTNERS=d.partners||[];
+  CUSTOMERS = cust.customers||[];
+  CC_PARTNERS = (cc.partners||[]).map(function(p){ return {id:p.id,name:p.name,sub:p.sub,baseKg:parseFloat(p.base_kg),base:p.base,add:p.add,codFlat:parseFloat(p.cod_flat),codPct:parseFloat(p.cod_pct),on:!!p.on}; });
+  if(isAdmin()){ try{ const u = await apiGet('users.php?action=list'); USERS = u.users||[]; }catch(e){} }
+  try{ const inv = await apiGet('invoices.php?action=list'); INVOICES = inv.invoices||[]; }catch(e){}
+}
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
+  try{
+    await apiPost('auth.php?action=login', {username:u,password:p});
+    document.getElementById('loginErr').textContent='';
+    await boot();
+  }catch(e){ document.getElementById('loginErr').textContent = typeof e==='string'?e:'Invalid username or password.'; }
+}
+async function logout(){ try{ await apiPost('auth.php?action=logout',{}); }catch(e){} await boot(); }
+function toggleRegister(show){
+  document.getElementById('loginView').classList.toggle('hide', show);
+  document.getElementById('registerView').classList.toggle('hide', !show);
+  document.getElementById('regErr').textContent=''; document.getElementById('regOk').textContent='';
+}
+async function doRegister(){
+  const u=document.getElementById('regUser').value.trim().toLowerCase(), email=document.getElementById('regEmail').value.trim();
+  const p=document.getElementById('regPass').value, p2=document.getElementById('regPass2').value, loc=document.getElementById('regLoc').value.trim();
+  const errEl=document.getElementById('regErr'); errEl.textContent='';
+  if(!u||!p){ errEl.textContent='Username & password கட்டாயம்.'; return; }
+  if(!/^[a-z0-9_]{3,32}$/.test(u)){ errEl.textContent='Username: 3-32 letters (a-z), numbers, underscore மட்டும்.'; return; }
+  if(p.length<8){ errEl.textContent='Password குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்.'; return; }
+  if(p!==p2){ errEl.textContent='Password இரண்டும் ஒன்றாக இல்லை.'; return; }
+  try{
+    const r=await apiPost('auth.php?action=register', {username:u,email:email,password:p,location:loc});
+    document.getElementById('regOk').textContent=r.message||'Account created. Wait for admin approval.';
+    document.getElementById('regUser').value='';document.getElementById('regEmail').value='';document.getElementById('regPass').value='';document.getElementById('regPass2').value='';document.getElementById('regLoc').value='';
+  }catch(e){ errEl.textContent = typeof e==='string'?e:'Registration failed.'; }
+}
+function renderUserBox(){
+  const box=document.getElementById('userBox');
+  if(SESSION) box.innerHTML='<span class="pill'+(SESSION.role==='admin'?' admin-pill':'')+'">'+esc(SESSION.username)+' ('+SESSION.role+')</span> <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>';
+  else box.innerHTML='';
+}
+function showToast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.getElementById('toastWrap').appendChild(t);
+  setTimeout(function(){t.remove();},5000);
+}
+function playBeep(){
+  try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.frequency.value=880; g.gain.value=0.08; o.start();
+    setTimeout(function(){o.stop();ctx.close();},180); }catch(e){}
+}
+let lastNotifId=0, firstPoll=true;
+async function pollNotifications(){
+  try{
+    const r = await apiGet('notifications.php?action=list');
+    NOTIFS = r.notifications||[];
+    const badge=document.getElementById('bellBadge');
+    if(r.unread>0){ badge.style.display='inline-block'; badge.textContent=r.unread>99?'99+':r.unread; } else badge.style.display='none';
+    if(!firstPoll && NOTIFS.length && NOTIFS[0].id > lastNotifId){
+      const newest = NOTIFS.filter(function(n){return n.id>lastNotifId;});
+      newest.reverse().forEach(function(n){ showToast('🧾 New invoice '+n.invoice_id+' by '+n.by_user+' — ₹'+parseFloat(n.total).toFixed(2)); });
+      if(newest.length) playBeep();
+    }
+    if(NOTIFS.length) lastNotifId = Math.max.apply(null, NOTIFS.map(function(n){return n.id;}));
+    firstPoll=false;
+    renderBell();
+  }catch(e){}
+}
+function renderBell(){
+  const list=document.getElementById('bellList');
+  if(!NOTIFS.length){ list.innerHTML='<div class="bell-empty">No notifications yet.</div>'; return; }
+  list.innerHTML=NOTIFS.slice(0,30).map(function(n){
+    return '<div class="bell-item'+(n.is_read==0?' unread':'')+'"><b>'+esc(n.customer)+' — ₹'+parseFloat(n.total).toFixed(2)+'</b>Invoice '+esc(n.invoice_id)+' by '+esc(n.by_user)+'<br><span style="color:var(--muted)">'+n.created_at+'</span></div>';
+  }).join('');
+}
+function toggleBell(){ const p=document.getElementById('bellPanel'); p.classList.toggle('hide'); }
+async function markAllRead(){ try{ await apiPost('notifications.php?action=mark_all_read',{}); }catch(e){} pollNotifications(); }
+
+function showTab(name){
+  ['invoice','customers','b2b','b2ccourier','history','users','partners','zonemaster','ratemaster','rates'].forEach(function(t){
+    document.getElementById('tab-'+t).classList.toggle('hide', t!==name);
+  });
+  document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===name); });
+  if(name==='zonemaster'){ renderZoneMaster(); renderStateZone(); }
+  if(name==='ratemaster'){ renderRateMaster(); renderB2BCfg(); renderCCMaster(); loadDelhiveryStatus(); }
+  if(name==='customers') renderCustomerTable();
+  if(name==='users' && isAdmin()) refreshUsersTab();
+  if(name==='history') refreshInvoicesAndCustomers();
+  if(name==='b2b') initB2B();
+  if(name==='b2ccourier') initCC();
+  if(name==='rates') buildRateTable();
+}
+
+// ---------------- ZONE / RATE MASTER ----------------
+function zoneLabel(z){ return z+' — '+(ZONEDEF[z]||''); }
+function populateSelects(){
+  ['pickupZone','destZone','b2bPickup','b2bDest'].forEach(function(id){
+    const sel=document.getElementById(id); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML=ZONES.map(function(z){ return '<option value="'+z+'">'+esc(zoneLabel(z))+'</option>'; }).join('');
+    if(cur && ZONES.indexOf(cur)>=0) sel.value=cur;
+  });
+  const psel=document.getElementById('partnerSel'); psel.innerHTML='';
+  PARTNERS.forEach(function(p){ const o=document.createElement('option'); o.value=p.name; o.textContent=p.name+' ('+p.mode+')'; psel.appendChild(o); });
+  const ln=document.getElementById('b2bLane');
+  if(ln){ ln.innerHTML='<option value="__auto">Auto (destination pincode)</option><option value="">None (zone rate)</option>'+Object.keys(LANES).map(function(k){return '<option>'+esc(k)+'</option>';}).join(''); ln.value='__auto'; }
+  refreshCustomerDatalist();
+}
+function buildRateTable(){
+  function tbl(r){
+    let h='<table><tr><th>Pickup\\Dest</th>'+ZONES.map(function(z){return '<th>'+z+'</th>';}).join('')+'</tr>';
+    ZONES.forEach(function(p){ h+='<tr><th>'+p+'</th>'+ZONES.map(function(d){ return '<td>'+((r[p]&&r[p][d]!==undefined)?r[p][d]:'-')+'</td>'; }).join('')+'</tr>'; });
+    return h+'</table>';
+  }
+  document.getElementById('rateTableWrap').innerHTML=tbl(RATES);
+  document.getElementById('bulkRateTableWrap').innerHTML=tbl(BULK_RATES);
+  let z='<table><tr><th>Zone</th><th>States/UTs Covered</th></tr>';
+  ZONES.forEach(function(k){ z+='<tr><td><b>'+k+'</b></td><td style="text-align:left">'+esc(ZONEDEF[k]||'-')+'</td></tr>'; });
+  document.getElementById('zoneDefWrap').innerHTML=z+'</table>';
+}
+function renderZoneMaster(){
+  const tb=document.querySelector('#zoneMasterTable tbody'); tb.innerHTML='';
+  ZONES.forEach(function(z){ tb.innerHTML+='<tr><td><b>'+z+'</b></td><td style="text-align:left">'+esc(ZONEDEF[z]||'-')+'</td><td class="no-print"><button class="btn btn-navy btn-sm" onclick="editZone(\''+z+'\')">Edit</button> <button class="btn btn-red btn-sm" onclick="delZone(\''+z+'\')">Delete</button></td></tr>'; });
+}
+function editZone(code){ document.getElementById('nzCode').value=code; document.getElementById('nzStates').value=ZONEDEF[code]||''; }
+async function addZone(){
+  if(!isAdmin())return;
+  const code=document.getElementById('nzCode').value.trim(), states=document.getElementById('nzStates').value.trim();
+  if(!code||!states){ document.getElementById('zoneErr').textContent='Zone Code & States இரண்டும் கட்டாயம்.'; return; }
+  document.getElementById('zoneErr').textContent='';
+  const isNew=ZONES.indexOf(code)<0;
+  if(isNew){
+    ZONES.push(code);
+    RATES[code]={}; BULK_RATES[code]={}; B2B_ZONE[code]={};
+    ZONES.forEach(function(z){
+      RATES[code][z]=(z===code?8.47:0); if(!RATES[z])RATES[z]={}; RATES[z][code]=(z===code?8.47:0);
+      BULK_RATES[code][z]=(z===code?8.47:0); if(!BULK_RATES[z])BULK_RATES[z]={}; BULK_RATES[z][code]=(z===code?8.47:0);
+      B2B_ZONE[code][z]=(z===code?7:0); if(!B2B_ZONE[z])B2B_ZONE[z]={}; B2B_ZONE[z][code]=(z===code?7:0);
+    });
+    await Promise.all([apiPost('kv.php?action=set',{name:'zones',value:ZONES}),apiPost('kv.php?action=set',{name:'rates_std',value:RATES}),
+      apiPost('kv.php?action=set',{name:'rates_bulk',value:BULK_RATES}),apiPost('kv.php?action=set',{name:'b2b_zone',value:B2B_ZONE})]);
+  }
+  ZONEDEF[code]=states;
+  await apiPost('kv.php?action=set',{name:'zonedef',value:ZONEDEF});
+  populateSelects(); buildRateTable(); renderZoneMaster();
+  document.getElementById('nzCode').value=''; document.getElementById('nzStates').value='';
+}
+async function delZone(code){
+  if(!isAdmin())return;
+  if(!confirm('Zone '+code+' ஐ நீக்கவா?'))return;
+  ZONES=ZONES.filter(function(z){return z!==code;});
+  delete ZONEDEF[code]; delete RATES[code]; delete BULK_RATES[code]; delete B2B_ZONE[code];
+  ZONES.forEach(function(z){ if(RATES[z])delete RATES[z][code]; if(BULK_RATES[z])delete BULK_RATES[z][code]; if(B2B_ZONE[z])delete B2B_ZONE[z][code]; });
+  await Promise.all([apiPost('kv.php?action=set',{name:'zones',value:ZONES}),apiPost('kv.php?action=set',{name:'zonedef',value:ZONEDEF}),
+    apiPost('kv.php?action=set',{name:'rates_std',value:RATES}),apiPost('kv.php?action=set',{name:'rates_bulk',value:BULK_RATES}),
+    apiPost('kv.php?action=set',{name:'b2b_zone',value:B2B_ZONE})]);
+  populateSelects(); buildRateTable(); renderZoneMaster();
+}
+function rateStore(){ return rmMode==='bulk'?BULK_RATES:(rmMode==='b2b'?B2B_ZONE:RATES); }
+function switchRateMaster(mode){
+  rmMode=mode;
+  [['std','rmStdBtn'],['bulk','rmBulkBtn'],['b2b','rmB2bBtn']].forEach(function(p){
+    const b=document.getElementById(p[1]); b.style.background=p[0]===mode?'var(--gold)':'var(--border)'; b.style.color=p[0]===mode?'var(--navy)':'var(--text)';
+  });
+  renderRateMaster();
+}
+function renderRateMaster(){
+  const R=rateStore();
+  let h='<table><tr><th>Pickup\\Dest</th>'+ZONES.map(function(z){return '<th>'+z+'</th>';}).join('')+'</tr>';
+  ZONES.forEach(function(p){ h+='<tr><th>'+p+'</th>'+ZONES.map(function(d){
+    const val=(R[p]&&R[p][d]!==undefined)?R[p][d]:0;
+    return '<td><input class="ratecell" type="number" step="0.01" min="0" data-p="'+p+'" data-d="'+d+'" value="'+val+'"></td>';
+  }).join('')+'</tr>'; });
+  document.getElementById('rateMasterWrap').innerHTML=h+'</table>';
+  document.getElementById('rateSavedMsg').textContent='';
+}
+async function saveRateMaster(){
+  if(!isAdmin())return;
+  const R=rateStore();
+  document.querySelectorAll('#rateMasterWrap input.ratecell').forEach(function(inp){
+    const p=inp.dataset.p,d=inp.dataset.d,v=parseFloat(inp.value)||0; if(!R[p])R[p]={}; R[p][d]=v;
+  });
+  const name=rmMode==='bulk'?'rates_bulk':(rmMode==='b2b'?'b2b_zone':'rates_std');
+  await apiPost('kv.php?action=set',{name:name,value:R});
+  buildRateTable();
+  document.getElementById('rateSavedMsg').textContent='✔ '+({std:'B2C Standard',bulk:'B2B Bulk',b2b:'B2B Freight (Delhivery)'})[rmMode]+' Rate Master updated.';
+}
+function renderStateZone(){
+  const w=document.getElementById('stateZoneWrap'); if(!w)return;
+  let h='<table><tr><th>State / UT</th><th>Zone</th></tr>';
+  Object.keys(STATE_ZONE).sort().forEach(function(st,i){
+    h+='<tr><td style="text-align:left">'+esc(st)+'</td><td><select data-st="'+i+'"><option value="">Not defined</option>'+ZONES.map(function(z){return '<option value="'+z+'"'+(STATE_ZONE[st]===z?' selected':'')+'>'+z+'</option>';}).join('')+'</select></td></tr>';
+  });
+  w.innerHTML=h+'</table>';
+}
+async function saveStateZone(){
+  if(!isAdmin())return;
+  const names=Object.keys(STATE_ZONE).sort();
+  document.querySelectorAll('#stateZoneWrap select[data-st]').forEach(function(sel){ STATE_ZONE[names[parseInt(sel.dataset.st,10)]]=sel.value; });
+  await apiPost('kv.php?action=set',{name:'state_zone',value:STATE_ZONE});
+  document.getElementById('stateZoneMsg').textContent='✔ State-Zone mapping updated.';
+}
+
+// ---------------- CUSTOMERS ----------------
+function renderCustomerTable(){
+  const tb=document.querySelector('#customerTable tbody'); tb.innerHTML='';
+  if(!CUSTOMERS.length){ tb.innerHTML='<tr><td colspan="6" style="color:var(--muted);">No customers yet.</td></tr>'; }
+  CUSTOMERS.forEach(function(c){
+    tb.innerHTML+='<tr><td>'+esc(c.name)+'</td><td>'+esc(c.mobile||'-')+'</td><td style="text-align:left">'+esc(c.addr||'-')+'</td>'+
+      '<td>'+(c.type==='B2B'?'🏢 B2B Bulk':'🧍 B2C')+'</td><td>'+esc(c.gstin||'-')+'</td>'+
+      '<td class="no-print"><button class="btn btn-navy btn-sm" onclick="editCustomer(\''+c.id+'\')">Edit</button> <button class="btn btn-red btn-sm" onclick="delCustomer(\''+c.id+'\')">Delete</button></td></tr>';
+  });
+  refreshCustomerDatalist();
+}
+function refreshCustomerDatalist(){
+  const dl=document.getElementById('custList'); if(!dl)return;
+  dl.innerHTML=CUSTOMERS.map(function(c){ return '<option value="'+esc(c.name+' ('+(c.mobile||'')+')')+'">'; }).join('');
+}
+function editCustomer(id){
+  const c=CUSTOMERS.find(function(x){return x.id==id;}); if(!c)return;
+  document.getElementById('ncName').value=c.name; document.getElementById('ncMobile').value=c.mobile||'';
+  document.getElementById('ncAddr').value=c.addr||''; document.getElementById('ncType').value=c.type||'B2C';
+  document.getElementById('ncGstin').value=c.gstin||'';
+}
+async function addCustomer(){
+  const name=document.getElementById('ncName').value.trim();
+  if(!name){ document.getElementById('custErr').textContent='Customer Name கட்டாயம்.'; return; }
+  document.getElementById('custErr').textContent='';
+  await apiPost('customers.php?action=upsert', {name:name, mobile:document.getElementById('ncMobile').value.trim(),
+    addr:document.getElementById('ncAddr').value.trim(), type:document.getElementById('ncType').value, gstin:document.getElementById('ncGstin').value.trim()});
+  const r=await apiGet('customers.php?action=list'); CUSTOMERS=r.customers||[];
+  renderCustomerTable();
+  document.getElementById('ncName').value='';document.getElementById('ncMobile').value='';document.getElementById('ncAddr').value='';document.getElementById('ncGstin').value='';
+}
+async function delCustomer(id){ await apiPost('customers.php?action=delete',{id:id}); const r=await apiGet('customers.php?action=list'); CUSTOMERS=r.customers||[]; renderCustomerTable(); }
+async function upsertCustomerFromInvoice(name,mobile,addr,type,gstin){
+  try{ await apiPost('customers.php?action=upsert', {name:name,mobile:mobile,addr:addr,type:type,gstin:gstin}); const r=await apiGet('customers.php?action=list'); CUSTOMERS=r.customers||[]; }catch(e){}
+}
+function pickCustomer(){
+  const v=document.getElementById('custSearch').value; const m=v.match(/^(.*)\s\((.*)\)$/); if(!m)return;
+  const c=CUSTOMERS.find(function(x){return x.name===m[1]&&(x.mobile||'')===m[2];});
+  if(c){ document.getElementById('custName').value=c.name; document.getElementById('custMobile').value=c.mobile||''; document.getElementById('custAddr').value=c.addr||''; document.getElementById('custGstin').value=c.gstin||''; setCustType(c.type||'B2C'); }
+}
+function setCustType(t){
+  custType=t;
+  document.getElementById('typeB2C').style.background=t==='B2C'?'var(--gold)':'var(--border)'; document.getElementById('typeB2C').style.color=t==='B2C'?'var(--navy)':'var(--text)';
+  document.getElementById('typeB2B').style.background=t==='B2B'?'var(--gold)':'var(--border)'; document.getElementById('typeB2B').style.color=t==='B2B'?'var(--navy)':'var(--text)';
+  document.getElementById('gstinWrap').classList.toggle('hide', t!=='B2B');
+}
+
+// ---------------- USERS / VENDORS ----------------
+function renderUserTable(){
+  const tb=document.querySelector('#userTable tbody'); tb.innerHTML='';
+  if(!isAdmin()) return;
+  const statusPill=function(s){ return s==='approved'?'🟢 Approved':(s==='pending'?'🟡 Pending':'🔴 Rejected'); };
+  USERS.forEach(function(u,i){
+    tb.innerHTML+='<tr><td>'+esc(u.username)+'</td><td>'+esc(u.email||'-')+'</td><td><span id="pw_'+i+'">••••••</span></td><td>'+u.role+'</td><td>'+statusPill(u.status)+'</td><td>'+esc(u.location||'-')+'</td>'+
+      '<td>₹'+parseFloat(u.wallet_balance||0).toFixed(2)+(u.role!=='admin'?' <button class="btn btn-ghost btn-sm no-print" style="padding:2px 6px;border:1px solid var(--border);color:var(--text);" onclick="manualWalletAdjust(\''+u.id+'\',\'credit\')">+</button> <button class="btn btn-ghost btn-sm no-print" style="padding:2px 6px;border:1px solid var(--border);color:var(--text);" onclick="manualWalletAdjust(\''+u.id+'\',\'debit\')">-</button>':'')+'</td>'+
+      '<td>'+(u.created_at||'-')+'</td><td>'+(u.last_login||'Never')+'</td>'+
+      '<td class="no-print"><button class="btn btn-navy btn-sm" onclick="resetPw(\''+u.id+'\')">Reset PW</button>'+
+      (u.username!==SESSION.username?' <button class="btn btn-red btn-sm" onclick="delUser(\''+u.id+'\')">Delete</button>':'')+'</td></tr>';
+  });
+}
+async function resetPw(id){
+  if(!isAdmin())return;
+  const np=prompt('New password:'); if(!np)return;
+  await apiPost('users.php?action=reset_password',{id:id,password:np});
+  alert('Password updated.');
+}
+async function addUser(){
+  if(!isAdmin())return;
+  const u=document.getElementById('nuUser').value.trim(), p=document.getElementById('nuPass').value, r=document.getElementById('nuRole').value, loc=document.getElementById('nuLocation').value.trim(), email=document.getElementById('nuEmail').value.trim();
+  if(!u||!p){ alert('Enter username & password'); return; }
+  try{ await apiPost('users.php?action=add',{username:u,email:email,password:p,role:r,location:loc}); }catch(e){ alert(typeof e==='string'?e:'Failed'); return; }
+  const rr=await apiGet('users.php?action=list'); USERS=rr.users||[]; renderUserTable();
+  document.getElementById('nuUser').value='';document.getElementById('nuPass').value='';document.getElementById('nuLocation').value='';document.getElementById('nuEmail').value='';
+}
+async function delUser(id){ if(!isAdmin())return; await apiPost('users.php?action=delete',{id:id}); const rr=await apiGet('users.php?action=list'); USERS=rr.users||[]; renderUserTable(); }
+
+// ---------------- SIMPLE COURIER PARTNERS ----------------
+function renderPartnerTable(){
+  const tb=document.querySelector('#partnerTable tbody'); tb.innerHTML='';
+  PARTNERS.forEach(function(p,i){ tb.innerHTML+='<tr><td>'+esc(p.name)+'</td><td>'+esc(p.mode)+'</td><td class="no-print"><button class="btn btn-red btn-sm" onclick="delPartner('+i+')">Delete</button></td></tr>'; });
+}
+async function addPartner(){
+  const n=document.getElementById('npName').value.trim(), m=document.getElementById('npMode').value;
+  if(!n){ alert('Enter partner name'); return; }
+  PARTNERS.push({name:n,mode:m});
+  await apiPost('kv.php?action=set',{name:'partners',value:PARTNERS});
+  renderPartnerTable(); populateSelects(); document.getElementById('npName').value='';
+}
+async function delPartner(i){ PARTNERS.splice(i,1); await apiPost('kv.php?action=set',{name:'partners',value:PARTNERS}); renderPartnerTable(); populateSelects(); }
+
+// ---------------- PINCODE -> BCI ZONE ----------------
+function validPin(p){ return /^[1-9]\d{5}$/.test(p); }
+function pinState(p){
+  const n=+p, n3=+p.slice(0,3), n2=+p.slice(0,2);
+  if(n3===194) return {s:'Ladakh'};
+  if(n2===18||n2===19) return {s:'Jammu & Kashmir'};
+  if(n3===744) return {s:'Andaman & Nicobar'};
+  if(n3===737) return {s:'Sikkim'};
+  if(n3>=790&&n3<=792) return {s:'Arunachal Pradesh'};
+  if(n3===793||n3===794) return {s:'Meghalaya'};
+  if(n3===795) return {s:'Manipur'};
+  if(n3===796) return {s:'Mizoram'};
+  if(n3===797||n3===798) return {s:'Nagaland'};
+  if(n3===799) return {s:'Tripura'};
+  if(n2===78) return {s:'Assam'};
+  if(n2===17) return {s:'Himachal Pradesh'};
+  if(n3===403) return {s:'Goa'};
+  if(n2===11) return {s:'Delhi'};
+  if(n3===160) return {s:'Chandigarh'};
+  if(n2===12||n2===13) return {s:'Haryana'};
+  if(n2>=14&&n2<=16) return {s:'Punjab'};
+  if((n>=605001&&n<=605014)||n===673310||n===533464||n===609601||n===609602) return {s:'Puducherry'};
+  if(n3===682&&n>=682551&&n<=682559) return {s:'Lakshadweep'};
+  const border=(n3===244||n3===247);
+  if([246,248,249,262,263].indexOf(n3)>=0||(n>=244712&&n<=244716)||(n>=247656&&n<=247670)) return {s:'Uttarakhand',border:border};
+  if(n2>=20&&n2<=28) return {s:'Uttar Pradesh',border:border};
+  if(n2>=30&&n2<=34) return {s:'Rajasthan'};
+  if(n2>=36&&n2<=39) return {s:'Gujarat'};
+  if(n2>=40&&n2<=44) return {s:'Maharashtra'};
+  if(n2>=45&&n2<=48) return {s:'Madhya Pradesh'};
+  if(n2===49) return {s:'Chhattisgarh'};
+  if(n2===50) return {s:'Telangana'};
+  if(n2>=51&&n2<=53) return {s:'Andhra Pradesh'};
+  if(n2>=56&&n2<=59) return {s:'Karnataka'};
+  if(n2>=60&&n2<=64) return {s:'Tamil Nadu'};
+  if(n2>=67&&n2<=69) return {s:'Kerala'};
+  if(n2>=70&&n2<=74) return {s:'West Bengal'};
+  if(n2>=75&&n2<=77) return {s:'Odisha'};
+  if(n2>=80&&n2<=85){ const jh=(n3>=814&&n3<=816)||n3===822||(n3>=825&&n3<=835); return {s:jh?'Jharkhand':'Bihar'}; }
+  return null;
+}
+function zoneOfPin(p){
+  if(!validPin(p)) return null;
+  const st=pinState(p);
+  if(!st) return {err:'இந்த pincode-க்கு மாநிலம் கண்டறிய முடியவில்லை - Zone-ஐ கைமுறையாக தேர்வு செய்யவும்'};
+  const z=STATE_ZONE[st.s];
+  if(!z||ZONES.indexOf(z)<0) return {state:st.s,err:st.s+' - Zone வரையறுக்கப்படவில்லை'};
+  return {state:st.s,zone:z,border:!!st.border};
+}
+function laneOfPin(p){
+  if(!validPin(p)) return '';
+  const n=+p, n3=+p.slice(0,3), n2=+p.slice(0,2);
+  if(n3===194) return 'Ladakh';
+  if(n2===18||n2===19) return 'Jammu & Kashmir';
+  if(n2===17) return 'Himachal Pradesh';
+  if(n3===737) return 'Sikkim';
+  if(n3>=790&&n3<=792) return 'Arunachal Pradesh';
+  if(n3===793||n3===794) return 'Meghalaya';
+  if(n3===795) return 'Manipur';
+  if(n3===796) return 'Mizoram';
+  if(n3===797||n3===798) return 'Nagaland';
+  if(n3===799) return 'Tripura';
+  if(n2===78) return (n>=781001&&n<=781040)?'Guwahati (Assam)':'Assam';
+  return '';
+}
+function applyPin(k){
+  const ids=k==='inv'?{f:'pinFrom',t:'pinTo',pz:'pickupZone',dz:'destZone',i:'pinInfo'}:{f:'b2bPinFrom',t:'b2bPinTo',pz:'b2bPickup',dz:'b2bDest',i:'b2bPinInfo'};
+  const el=function(id){return document.getElementById(id);};
+  const parts=[];
+  [['f','pz','Pickup'],['t','dz','Destination']].forEach(function(x){
+    const v=el(ids[x[0]]).value.trim(); if(!v) return;
+    if(!validPin(v)){ parts.push(x[2]+': 6 இலக்க pincode உள்ளிடவும்'); return; }
+    const r=zoneOfPin(v);
+    if(r.zone){ el(ids[x[1]]).value=r.zone; parts.push(x[2]+': '+r.state+' → '+r.zone+(r.border?' (border pincode - சரிபார்க்கவும்)':'')); }
+    else parts.push(x[2]+': '+r.err);
+  });
+  let t=parts.join(' | ');
+  if(k==='b2b'){ const ln=laneOfPin(el('b2bPinTo').value.trim()); if(ln && el('b2bLane').value==='__auto') t+=(t?' | ':'')+'Special lane: '+ln; }
+  el(ids.i).textContent=t||'Pickup & Destination pincode உள்ளிட்டால் Zone தானாக தேர்வாகும்.';
+}
+
+// ---------------- NEW INVOICE (simple B2C/B2B Bulk matrix) ----------------
+let lastCalc=null;
+function calcInvoice(){
+  const pk=document.getElementById('pickupZone').value, ds=document.getElementById('destZone').value;
+  const wt=parseFloat(document.getElementById('weightKg').value)||0;
+  const R = custType==='B2B' ? BULK_RATES : RATES;
+  const rate=(R[pk]&&R[pk][ds]!==undefined)?R[pk][ds]:0;
+  const sub=rate*wt, gst=sub*GST, total=sub+gst;
+  document.getElementById('rPerKg').textContent='₹'+rate.toFixed(2)+' ('+(custType==='B2B'?'B2B Bulk':'B2C Standard')+')';
+  document.getElementById('rSub').textContent='₹'+sub.toFixed(2);
+  document.getElementById('rGst').textContent='₹'+gst.toFixed(2);
+  document.getElementById('rTotal').textContent=total.toFixed(2);
+  lastCalc={pk:pk,ds:ds,wt:wt,rate:rate,sub:sub,gst:gst,total:total};
+  return lastCalc;
+}
+async function saveInvoice(){
+  const name=document.getElementById('custName').value.trim();
+  if(!name){ document.getElementById('invErr').textContent='Enter customer name.'; return; }
+  const c=calcInvoice();
+  const mobile=document.getElementById('custMobile').value, addr=document.getElementById('custAddr').value, gstin=document.getElementById('custGstin').value.trim();
+  const payload={customer:name,mobile:mobile,addr:addr,custType:custType,gstin:gstin,pickup:c.pk,dest:c.ds,weight:c.wt,
+    pieces:parseInt(document.getElementById('pieces').value)||1,partner:document.getElementById('partnerSel').value,
+    rate:c.rate,sub:c.sub,gst:c.gst,total:c.total,extra:null};
+  let r;
+  try{ r=await apiPost('invoices.php?action=create', payload); }catch(e){ document.getElementById('invErr').textContent='Save failed: '+e; return; }
+  document.getElementById('invErr').textContent='';
+  const inv=Object.assign({id:r.id,created_at:new Date().toLocaleString(),by_user:SESSION.username},payload);
+  await refreshInvoicesAndCustomers();
+  renderInvoicePrint(normInv(inv));
+}
+async function refreshInvoicesAndCustomers(){
+  try{ const inv=await apiGet('invoices.php?action=list'); INVOICES=inv.invoices||[]; }catch(e){}
+  try{ const cu=await apiGet('customers.php?action=list'); CUSTOMERS=cu.customers||[]; refreshCustomerDatalist(); }catch(e){}
+  renderHistory(); loadWalletBalance();
+}
+function normInv(r){
+  // normalise a DB row (snake_case) or freshly-built object into the shape the UI expects
+  return {
+    id:r.id, date:r.created_at||r.date, customer:r.customer, mobile:r.mobile, addr:r.addr,
+    custType:r.cust_type||r.custType, gstin:r.gstin, pickup:r.pickup, dest:r.dest,
+    weight:parseFloat(r.weight), pieces:r.pieces, partner:r.partner, rate:parseFloat(r.rate),
+    sub:parseFloat(r.sub_total!==undefined?r.sub_total:r.sub), gst:parseFloat(r.gst), total:parseFloat(r.total),
+    by:r.by_user||r.by, b2b:(r.extra&&r.extra.kind==='b2b')?r.extra:null, cc:(r.extra&&r.extra.kind==='cc')?r.extra:null
+  };
+}
+
+// ---------------- HISTORY ----------------
+function filterHistory(t,ev){
+  histFilterType=t;
+  document.querySelectorAll('#histFilter button').forEach(function(b){ b.classList.remove('btn-gold'); b.classList.add('btn-navy'); });
+  if(ev && ev.target){ ev.target.classList.remove('btn-navy'); ev.target.classList.add('btn-gold'); }
+  renderHistory();
+}
+function renderHistory(){
+  const tb=document.querySelector('#histTable tbody'); if(!tb) return; tb.innerHTML='';
+  let list=INVOICES;
+  if(histFilterType!=='ALL') list=list.filter(function(i){ return (i.cust_type||'B2C')===histFilterType; });
+  list.forEach(function(inv){
+    tb.innerHTML+='<tr><td>'+inv.id+'</td><td>'+inv.created_at+'</td><td>'+esc(inv.customer)+'</td><td>'+(inv.cust_type==='B2B'?'🏢 B2B':'🧍 B2C')+'</td>'+
+      '<td>'+esc(inv.pickup)+'→'+esc(inv.dest)+'</td><td>'+inv.weight+'kg</td><td>'+esc(inv.partner)+'</td><td>₹'+parseFloat(inv.total).toFixed(2)+'</td><td>'+esc(inv.by_user)+'</td>'+
+      '<td class="no-print"><button class="btn btn-navy btn-sm" onclick="viewInvoice(\''+inv.id+'\')">View</button></td></tr>';
+  });
+}
+async function viewInvoice(id){
+  try{ const r=await apiGet('invoices.php?action=get&id='+encodeURIComponent(id)); renderInvoicePrint(normInv(r.invoice)); showTab('invoice'); }
+  catch(e){ alert('Could not load invoice: '+e); }
+}
+
+// ---------------- B2B FREIGHT (calc happens server-side, margin hidden per role) ----------------
+function pickB2BCustomer(){
+  const m=document.getElementById('b2bSearch').value.match(/^(.*)\s\((.*)\)$/); if(!m)return;
+  const c=CUSTOMERS.find(function(x){return x.name===m[1]&&(x.mobile||'')===m[2];});
+  if(c){ document.getElementById('b2bName').value=c.name; document.getElementById('b2bMobile').value=c.mobile||''; document.getElementById('b2bAddr').value=c.addr||''; document.getElementById('b2bGstin').value=c.gstin||''; }
+}
+function addPkgRow(){
+  const tb=document.getElementById('b2bPkgBody'); if(!tb)return;
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td><input class="pk-q" type="number" min="1" value="1" style="width:60px"></td>'+
+    '<td><input class="pk-l" type="number" min="0" step="0.1" style="width:70px"></td>'+
+    '<td><input class="pk-b" type="number" min="0" step="0.1" style="width:70px"></td>'+
+    '<td><input class="pk-h" type="number" min="0" step="0.1" style="width:70px"></td>'+
+    '<td><input class="pk-w" type="number" min="0" step="0.1" style="width:80px"></td>'+
+    '<td><button type="button" class="btn btn-red btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+  tb.appendChild(tr);
+}
+function initB2B(){
+  if(!document.querySelector('#b2bPkgBody tr')) addPkgRow();
+  const dz=document.getElementById('b2bDiesel'); if(dz && !dz.value) dz.value=B2B_CFG.dieselPeg||90.54;
+  const mw=document.getElementById('b2bMarginWrap'), mi=document.getElementById('b2bMargin');
+  mw.classList.toggle('hide', !isAdmin());
+  if(!mi.value) mi.value=B2B_CFG.markupPct||15;
+  const note=document.getElementById('b2bRateNote');
+  note.textContent = isAdmin()
+    ? 'Freight = Delhivery B2B zone/lane rate + margin (default '+(B2B_CFG.markupPct||15)+'%, allowed 10-20%), plus overhead charges. Margin visible to Admin only.'
+    : 'Freight and overhead charges are calculated as per the B2B freight rate schedule.';
+}
+function getMargin(){
+  let m=B2B_CFG.markupPct||15;
+  if(isAdmin()){ const v=parseFloat(document.getElementById('b2bMargin').value); if(!isNaN(v)) m=v; }
+  return m;
+}
+async function calcB2B(){
+  const el=function(id){return document.getElementById(id);}, num=function(id){return parseFloat(el(id).value)||0;}, chk=function(id){return el(id).checked;};
+  el('b2bErr').textContent='';
+  const pk=el('b2bPickup').value, ds=el('b2bDest').value;
+  let lane=el('b2bLane').value; if(lane==='__auto') lane=laneOfPin(el('b2bPinTo').value.trim());
+  let actual=0, vol=0, pcs=0;
+  document.querySelectorAll('#b2bPkgBody tr').forEach(function(tr){
+    const q=parseFloat(tr.querySelector('.pk-q').value)||0, l=parseFloat(tr.querySelector('.pk-l').value)||0,
+          b=parseFloat(tr.querySelector('.pk-b').value)||0, h=parseFloat(tr.querySelector('.pk-h').value)||0, w=parseFloat(tr.querySelector('.pk-w').value)||0;
+    actual+=q*w; vol+=q*l*b*h/(B2B_CFG.volDivisor||4500); pcs+=q;
+  });
+  if(actual<=0 && vol<=0){ el('b2bErr').textContent='Package weight / dimensions உள்ளிடவும்.'; return null; }
+  const payload={pickup:pk,dest:ds,lane:lane,actual:actual,vol:vol,pieces:pcs,declared:num('b2bDeclared'),diesel:num('b2bDiesel'),
+    gstType:el('b2bGstType').value, fov:chk('b2bFov'), oda:chk('b2bOda'), appt:chk('b2bAppt'), csd:chk('b2bCsd'), green:chk('b2bGreen'),
+    topay:chk('b2bTopay'), cod:chk('b2bCod'), codAmt:num('b2bCodAmt'), demDays:num('b2bDemDays')};
+  if(isAdmin()) payload.marginOverride=getMargin();
+  let r;
+  try{ r=await apiPost('b2b.php?action=calc', payload); }catch(e){ el('b2bErr').textContent=typeof e==='string'?e:'Calculation failed.'; return null; }
+  r.kind='b2b';
+  lastB2B=r;
+  document.getElementById('b2bResultCard').style.display='block';
+  document.getElementById('b2bResult').innerHTML=detailTableHtml({b2b:r})+adminMarginHtml({b2b:r});
+  return r;
+}
+async function saveB2BInvoice(){
+  const el=function(id){return document.getElementById(id);};
+  const name=el('b2bName').value.trim();
+  if(!name){ el('b2bErr').textContent='Customer name உள்ளிடவும்.'; return; }
+  const c=await calcB2B(); if(!c)return;
+  const mobile=el('b2bMobile').value, addr=el('b2bAddr').value, gstin=el('b2bGstin').value.trim();
+  const payload={customer:name,mobile:mobile,addr:addr,custType:'B2B',gstin:gstin,pickup:c.pk,dest:c.lane||c.ds,weight:c.cw,
+    pieces:c.pcs,partner:'Delhivery B2B Freight',rate:c.rate,sub:c.sub,gst:c.gstTotal,total:c.total,extra:Object.assign({kind:'b2b'},c)};
+  let r;
+  try{ r=await apiPost('invoices.php?action=create', payload); }catch(e){ el('b2bErr').textContent='Save failed: '+e; return; }
+  await refreshInvoicesAndCustomers();
+  const inv={id:r.id,date:new Date().toLocaleString(),customer:name,mobile:mobile,addr:addr,custType:'B2B',gstin:gstin,
+    pickup:c.pk,dest:c.lane||c.ds,weight:c.cw,pieces:c.pcs,partner:'Delhivery B2B Freight',rate:c.rate,sub:c.sub,gst:c.gstTotal,total:c.total,by:SESSION.username,b2b:c};
+  renderInvoicePrint(inv); showTab('invoice');
+}
+
+// ---------------- B2C COURIER (server-side compare, margin hidden per role) ----------------
+const CC_CATS=['City','Region','Metro','ROI','Special'];
+const CC_MET={DEL:['110','121','122','201'],MUM:['400','401','410','421'],BLR:['560','561','562'],CHE:['600','601','602','603'],HYD:['500','501','502'],KOL:['700','711','712','743']};
+function ccMetro(p){ const p3=p.slice(0,3); for(const k in CC_MET){ if(CC_MET[k].indexOf(p3)>=0) return k; } return ''; }
+function ccCategory(o,d){
+  const so=pinState(o), sd=pinState(d);
+  const spec=String(CC_CFG.specialStates||'').split(',').map(function(x){return x.trim();});
+  if(sd && spec.indexOf(sd.s)>=0) return {c:4,why:'Special destination ('+sd.s+')'};
+  const mo=ccMetro(o), md=ccMetro(d);
+  if((mo&&mo===md)||o.slice(0,4)===d.slice(0,4)) return {c:0,why:'Same city'};
+  const zo=so?STATE_ZONE[so.s]:'', zd=sd?STATE_ZONE[sd.s]:'';
+  if(zo&&zd&&zo===zd) return {c:1,why:'Same region ('+zo+')'};
+  if(mo&&md) return {c:2,why:'Metro to Metro'};
+  return {c:3,why:'Rest of India'};
+}
+function updateCCInfo(){
+  const el=document.getElementById('cc_info'); if(!el)return;
+  const o=document.getElementById('cc_from').value.trim(), d=document.getElementById('cc_to').value.trim(), cs=document.getElementById('cc_cat').value;
+  if(cs!=='auto'){ el.textContent='Category: '+CC_CATS[parseInt(cs,10)]+' (கைமுறை தேர்வு)'; return; }
+  if(validPin(o)&&validPin(d)){ const r=ccCategory(o,d); el.textContent='Category: '+CC_CATS[r.c]+' - '+r.why; }
+  else el.textContent='Pickup & Destination pincode உள்ளிட்டால் Delivery Category தானாக காட்டப்படும்.';
+}
+function pickCCCustomer(){
+  const m=document.getElementById('cc_search').value.match(/^(.*)\s\((.*)\)$/); if(!m)return;
+  const c=CUSTOMERS.find(function(x){return x.name===m[1]&&(x.mobile||'')===m[2];});
+  if(c){ document.getElementById('cc_name').value=c.name; document.getElementById('cc_mobile').value=c.mobile||''; document.getElementById('cc_addr').value=c.addr||''; }
+}
+function initCC(){
+  const mw=document.getElementById('cc_mw'), mi=document.getElementById('cc_margin');
+  mw.classList.toggle('hide', !isAdmin());
+  if(!mi.value) mi.value=CC_CFG.marginPct||15;
+  updateCCInfo();
+}
+async function calcCC(){
+  const g=function(x){return document.getElementById('cc_'+x);}, num=function(x){return parseFloat(g(x).value)||0;};
+  g('err').textContent='';
+  const actual=num('wt'), vol=num('l')*num('b')*num('h')/(CC_CFG.volDivisor||5000);
+  if(actual<=0&&vol<=0){ g('err').textContent='Weight உள்ளிடவும்.'; return null; }
+  const cw=rnd2(Math.max(actual,vol));
+  let ci;
+  if(g('cat').value==='auto'){
+    const o=g('from').value.trim(), d=g('to').value.trim();
+    if(!validPin(o)||!validPin(d)){ g('err').textContent='Pickup & Destination pincode உள்ளிடவும் அல்லது Category தேர்வு செய்யவும்.'; return null; }
+    ci=ccCategory(o,d).c;
+  } else ci=parseInt(g('cat').value,10);
+  const payload={cw:cw,category:ci,cod:g('pay').value==='COD',orderValue:num('val'),gstType:g('gst').value};
+  if(isAdmin()) payload.marginOverride=parseFloat(g('margin').value)||CC_CFG.marginPct;
+  let r;
+  try{ r=await apiPost('cc.php?action=compare', payload); }catch(e){ g('err').textContent=typeof e==='string'?e:'Calculation failed.'; return null; }
+  CC_LAST={rows:r.rows,cw:cw,ci:ci,cod:payload.cod,val:payload.orderValue,gt:payload.gstType};
+  if(!r.rows.some(function(x){return x.id===CC_SEL;})) CC_SEL=r.rows[0]?r.rows[0].id:'';
+  renderCCRows();
+  return CC_LAST;
+}
+function renderCCRows(){
+  const L=CC_LAST; if(!L)return;
+  let h='<table><tr><th></th><th>Courier</th><th>Freight ₹</th>'+(L.cod?'<th>COD ₹</th>':'')+'<th>GST ₹</th><th>Total ₹</th>'+(isAdmin()?'<th>Margin ₹ 🔒</th>':'')+'</tr>';
+  L.rows.forEach(function(r,i){
+    h+='<tr><td><input type="radio" name="ccSel" style="width:auto" value="'+esc(r.id)+'"'+(r.id===CC_SEL?' checked':'')+' onchange="CC_SEL=this.value"></td>'+
+      '<td style="text-align:left;white-space:normal"><b>'+esc(r.name)+'</b>'+(r.sub?'<br><span class="tc">'+esc(r.sub)+'</span>':'')+(i===0?' <span class="pill">Lowest</span>':'')+
+      '<br><span class="tc">'+(L.cw<=r.baseKg?'min '+r.baseKg+' kg slab':r.baseKg+' kg + '+r.ex+' kg')+'</span></td>'+
+      '<td>'+r.freight.toFixed(2)+'</td>'+(L.cod?'<td>'+r.codAmt.toFixed(2)+'</td>':'')+'<td>'+r.gstTotal.toFixed(2)+'</td><td><b>'+r.total.toFixed(2)+'</b></td>'+
+      (isAdmin()?'<td>'+(r.marginAmt!==undefined?r.marginAmt.toFixed(2)+' ('+r.marginPct+'%)':'-')+'</td>':'')+'</tr>';
+  });
+  document.getElementById('cc_resCard').style.display='block';
+  document.getElementById('cc_res').innerHTML=h+'</table>';
+}
+async function saveCCInvoice(){
+  const g=function(x){return document.getElementById('cc_'+x);};
+  const name=g('name').value.trim();
+  if(!name){ g('err').textContent='Customer name உள்ளிடவும்.'; return; }
+  const L=await calcCC(); if(!L)return;
+  const r=L.rows.find(function(x){return x.id===CC_SEL;})||L.rows[0];
+  const lines=[{label:'Freight - '+r.name+(r.sub?' ('+r.sub+')':'')+' ['+CC_CATS[L.ci]+']', basis:L.cw+' kg chargeable weight', amt:r.freight}];
+  if(L.cod) lines.push({label:'COD charge',basis:'',amt:r.codAmt});
+  const extra={kind:'cc',cat:CC_CATS[L.ci],actual:L.cw,vol:0,cw:L.cw,pcs:1,declared:L.val,lines:lines,sub:r.sub_total,gstType:L.gt,
+    gstLines:r.gstLines,gstTotal:r.gstTotal,roundOff:0,total:r.total,marginPct:r.marginPct,costSub:(r.costFr!==undefined?rnd2(r.costFr+r.codAmt):undefined),marginAmt:r.marginAmt};
+  const mobile=g('mobile').value, addr=g('addr').value;
+  const payload={customer:name,mobile:mobile,addr:addr,custType:'B2C',gstin:'',pickup:g('from').value.trim()||'-',
+    dest:(g('to').value.trim()||'-')+' ('+CC_CATS[L.ci]+')',weight:L.cw,pieces:1,partner:r.name+(r.sub?' - '+r.sub:''),
+    rate:rnd2(r.freight/L.cw),sub:r.sub_total,gst:r.gstTotal,total:r.total,extra:extra};
+  let rr;
+  try{ rr=await apiPost('invoices.php?action=create', payload); }catch(e){ g('err').textContent='Save failed: '+e; return; }
+  await refreshInvoicesAndCustomers();
+  const inv=Object.assign({id:rr.id,date:new Date().toLocaleString(),by:SESSION.username,custType:'B2C',cc:extra},payload);
+  renderInvoicePrint(inv); showTab('invoice');
+}
+
+// ---------------- B2B CHARGES MASTER (admin) ----------------
+const CFG_LABELS={markupPct:'BCI margin on freight rates (%) - 10 to 20',docket:'Docket charge (₹ per LR)',fscPct:'Fuel Surcharge FSC (% of freight)',
+fovPct:"FOV/ROV owner's risk (% of declared value)",fovMin:'FOV/ROV minimum (₹)',volDivisor:'Volumetric divisor (cm³ per kg)',minWt:'Minimum chargeable weight (kg)',
+minFreight:'Minimum chargeable amount (₹ per LR)',handlingWt:'Handling charge applies from (kg)',handlingPerKg:'Handling charge (₹/kg)',
+odaPerKg:'ODA charge (₹/kg)',odaMin:'ODA minimum (₹)',apptPerKg:'Appointment/Mall delivery (₹/kg)',apptMin:'Appointment minimum (₹)',
+csdPerKg:'CSD/Army delivery (₹/kg)',csdMin:'CSD/Army minimum (₹)',demPerKg:'Demurrage (₹/kg)',demMin:'Demurrage minimum (₹)',
+freeStorageDays:'Free storage period (days)',dieselPeg:'Diesel peg (₹/litre)',dieselStep:'Fuel hike step (₹/litre)',dieselPct:'Freight change per step (%)',
+topay:'To-Pay (₹ per LR)',codFee:'Value to collect charge (₹ per LR)',cashPct:'Cash handling (% of COD amount)',cashMin:'Cash handling minimum (₹)',
+greenPerKg:'Green tax (₹/kg)',greenMin:'Green tax minimum (₹)',maxLiability:"Max liability - owner's risk (₹)"};
+function renderB2BCfg(){
+  const w=document.getElementById('b2bCfgWrap'); if(!w)return;
+  w.innerHTML=Object.keys(CFG_LABELS).map(function(k){
+    return '<div><label>'+CFG_LABELS[k]+'</label><input type="number" step="0.01" data-k="'+k+'" value="'+(B2B_CFG[k]!==undefined?B2B_CFG[k]:0)+'"'+(k==='markupPct'?' min="10" max="20"':'')+'></div>';
+  }).join('');
+}
+async function saveB2BCfg(){
+  if(!isAdmin())return;
+  document.querySelectorAll('#b2bCfgWrap input[data-k]').forEach(function(inp){ const v=parseFloat(inp.value); if(!isNaN(v)) B2B_CFG[inp.dataset.k]=v; });
+  B2B_CFG.markupPct=Math.min(20,Math.max(10,B2B_CFG.markupPct));
+  await apiPost('b2b.php?action=save_cfg', {cfg:B2B_CFG});
+  renderB2BCfg();
+  const mi=document.getElementById('b2bMargin'); if(mi) mi.value=B2B_CFG.markupPct;
+  document.getElementById('b2bCfgMsg').textContent='✔ B2B Charges Master updated.';
+}
+
+// ---------------- B2C COURIER MASTER (admin) ----------------
+function renderCCMaster(){
+  const w=document.getElementById('ccMasterWrap'); if(!w)return;
+  const inp=function(i,f,v,wd,t){ return '<td><input type="'+(t||'number')+'" step="0.01" min="0" data-i="'+i+'" data-f="'+f+'" value="'+esc(v)+'" style="width:'+wd+'px;padding:4px;"></td>'; };
+  let h='<table><tr><th>On</th><th>Courier</th><th>Service</th><th>Base kg</th>'+CC_CATS.map(function(c){return '<th>'+c+' ₹</th>';}).join('')+CC_CATS.map(function(c){return '<th>+1kg '+c+'</th>';}).join('')+'<th>COD ₹</th><th>COD %</th><th></th></tr>';
+  CC_PARTNERS.forEach(function(p,i){
+    h+='<tr><td><input type="checkbox" data-i="'+i+'" data-f="on" style="width:auto"'+(p.on!==false?' checked':'')+'></td>'+inp(i,'name',p.name,150,'text')+inp(i,'sub',p.sub,110,'text')+inp(i,'baseKg',p.baseKg,52);
+    for(let k=0;k<5;k++) h+=inp(i,'b'+k,p.base[k],62);
+    for(let k=0;k<5;k++) h+=inp(i,'a'+k,p.add[k],52);
+    h+=inp(i,'codFlat',p.codFlat,56)+inp(i,'codPct',p.codPct,52)+'<td><button class="btn btn-red btn-sm" onclick="delCCPartner('+i+')">✕</button></td></tr>';
+  });
+  w.innerHTML=h+'</table>';
+  document.getElementById('ccCfgDiv').value=CC_CFG.volDivisor||5000;
+  document.getElementById('ccCfgSpecial').value=CC_CFG.specialStates||'';
+  document.getElementById('ccCfgMargin').value=CC_CFG.marginPct||15;
+}
+function collectCC(){
+  document.querySelectorAll('#ccMasterWrap [data-f]').forEach(function(el){
+    const p=CC_PARTNERS[parseInt(el.dataset.i,10)]; if(!p)return;
+    const f=el.dataset.f;
+    if(f==='on') p.on=el.checked;
+    else if(f==='name'||f==='sub') p[f]=el.value;
+    else if(/^b\d$/.test(f)) p.base[+f.charAt(1)]=parseFloat(el.value)||0;
+    else if(/^a\d$/.test(f)) p.add[+f.charAt(1)]=parseFloat(el.value)||0;
+    else p[f]=parseFloat(el.value)||0;
+  });
+  const dv=parseFloat(document.getElementById('ccCfgDiv').value); if(dv>0) CC_CFG.volDivisor=dv;
+  CC_CFG.specialStates=document.getElementById('ccCfgSpecial').value;
+  const mv=parseFloat(document.getElementById('ccCfgMargin').value); if(!isNaN(mv)) CC_CFG.marginPct=Math.min(20,Math.max(10,mv));
+}
+async function saveCCMaster(){
+  if(!isAdmin())return;
+  collectCC();
+  await apiPost('cc.php?action=save', {partners:CC_PARTNERS.map(function(p){return {id:p.id,name:p.name,sub:p.sub,baseKg:p.baseKg,base:p.base,add:p.add,codFlat:p.codFlat,codPct:p.codPct,on:p.on};}), cfg:CC_CFG});
+  const r=await apiGet('cc.php?action=list');
+  CC_PARTNERS=(r.partners||[]).map(function(p){ return {id:p.id,name:p.name,sub:p.sub,baseKg:parseFloat(p.base_kg),base:p.base,add:p.add,codFlat:parseFloat(p.cod_flat),codPct:parseFloat(p.cod_pct),on:!!p.on}; });
+  renderCCMaster();
+  const cm=document.getElementById('cc_margin'); if(cm) cm.value=CC_CFG.marginPct;
+  document.getElementById('ccMasterMsg').textContent='✔ B2C Courier rates updated.';
+}
+function addCCPartner(){
+  if(!isAdmin())return;
+  collectCC();
+  CC_PARTNERS.push({id:'cc'+Date.now(),name:'New Courier',sub:'',baseKg:1,base:[0,0,0,0,0],add:[0,0,0,0,0],codFlat:0,codPct:0,on:true});
+  renderCCMaster();
+}
+function delCCPartner(i){ if(!isAdmin())return; collectCC(); CC_PARTNERS.splice(i,1); renderCCMaster(); }
+
+// ---------------- INVOICE PRINT / DOWNLOAD ----------------
+function detailTableHtml(inv){
+  const b=inv.b2b||inv.cc;
+  if(b){
+    let h='<p><b>Actual wt:</b> '+(b.actual!==undefined?b.actual:b.cw)+' kg &nbsp; <b>Chargeable wt:</b> '+b.cw+' kg &nbsp; <b>Packages:</b> '+(b.pcs||1)+(b.declared?' &nbsp; <b>Declared value:</b> ₹'+b.declared:'')+'</p>';
+    h+='<table><tr><th>#</th><th>Description</th><th>Basis</th><th>Amount (₹)</th></tr>';
+    (b.lines||[]).forEach(function(l,i){ h+='<tr><td>'+(i+1)+'</td><td style="text-align:left;white-space:normal">'+esc(l.label)+'</td><td style="text-align:left;white-space:normal">'+esc(l.basis)+'</td><td style="text-align:right">'+parseFloat(l.amt).toFixed(2)+'</td></tr>'; });
+    h+='<tr><td colspan="3" style="text-align:right"><b>Sub Total</b></td><td style="text-align:right"><b>'+parseFloat(b.sub).toFixed(2)+'</b></td></tr>';
+    (b.gstLines||[]).forEach(function(g){ h+='<tr><td colspan="3" style="text-align:right">'+esc(g.label)+'</td><td style="text-align:right">'+parseFloat(g.amt).toFixed(2)+'</td></tr>'; });
+    if(b.roundOff) h+='<tr><td colspan="3" style="text-align:right">Round off</td><td style="text-align:right">'+parseFloat(b.roundOff).toFixed(2)+'</td></tr>';
+    h+='<tr><td colspan="3" style="text-align:right"><b>TOTAL PAYABLE</b></td><td style="text-align:right"><b>₹'+parseFloat(b.total).toFixed(2)+'</b></td></tr></table>';
+    return h;
+  }
+  return '<table><tr><th>Rate/Kg</th><th>Subtotal</th><th>GST 18%</th><th>Total</th></tr><tr><td>₹'+parseFloat(inv.rate).toFixed(2)+'</td><td>₹'+parseFloat(inv.sub).toFixed(2)+'</td><td>₹'+parseFloat(inv.gst).toFixed(2)+'</td><td><b>₹'+parseFloat(inv.total).toFixed(2)+'</b></td></tr></table>';
+}
+function adminMarginHtml(inv){
+  const b=inv.b2b||inv.cc;
+  if(!isAdmin()||!b||b.marginAmt===undefined) return '';
+  return '<p class="tc no-print" style="border:1px dashed var(--gold);padding:8px;border-radius:8px;">🔒 <b>Admin only</b> — Cost (before GST): ₹'+parseFloat(b.costSub).toFixed(2)+' | Margin '+b.marginPct+'%: ₹'+parseFloat(b.marginAmt).toFixed(2)+'</p>';
+}
+function termsHtml(inv){
+  const C=B2B_CFG;
+  let h='<h3>Terms &amp; Conditions</h3><div class="tc">'+
+   '1. Goods once booked cannot be cancelled.<br>2. All disputes are subject to Tirupur Jurisdiction only.<br>'+
+   '3. Interest @ 24% p.a. will be charged on delayed payments.<br>4. Please make payments to BCI EXPRESS.COM bank account only.<br>5. GST @ 18% is applicable on all rates.<br><br>'+
+   '<b>Service Aggregator Disclaimer:</b> BCI EXPRESS.COM, a brand of BIG CART INDIA, acts solely as a logistics service aggregator and booking facilitator. Any delay, loss, damage, shortage, theft, non-delivery, service interruption, or other issue is the sole responsibility of the respective courier/logistics partner; BCI EXPRESS.COM shall not be liable for any such claims, losses, damages, or compensation.<br><br>'+
+   '<b>Customer Acknowledgement:</b> By booking through BCI EXPRESS.COM, the customer agrees to the terms of the selected courier/logistics partner.';
+  if(inv.b2b){
+    h+='<br><br><b>B2B Freight Terms (Bulk / LTL):</b><br>'+
+    'A. Shipments accepted on "SAID TO CONTAIN" basis; customer must declare a true and correct description/value and pack adequately.<br>'+
+    "B. Shipments booked at OWNER'S RISK. Liability limited to manifested value or ₹"+(C.maxLiability||5000)+', whichever is lower; aggregate liability capped at 25% of freight paid in the preceding month.<br>'+
+    'C. Damage/shortage must be recorded on the POD at delivery. Claims after 72 hours of shipment closure will not be entertained.<br>'+
+    'D. Chargeable weight is the higher of actual and volumetric weight, minimum '+(C.minWt||20)+' kg, minimum freight ₹'+(C.minFreight||350)+' per LR.<br>'+
+    'E. FSC '+(C.fscPct||20)+'%, docket ₹'+(C.docket||150)+' per LR. Freight varies '+(C.dieselPct||2)+'% per ₹'+(C.dieselStep||3)+'/L diesel change from base ₹'+(C.dieselPeg||90.54)+'/L.<br>'+
+    'F. ODA, appointment/mall, CSD/army, handling, green tax, to-pay, COD/cash handling and FOV/ROV charges apply as shown.<br>'+
+    'G. Demurrage after '+(C.freeStorageDays||4)+' free days. Undeliverable shipments returned (RTO) at customer cost; unclaimed after 30 days may be disposed of.<br>'+
+    'H. Prohibited items (cash, jewellery, hazardous goods, narcotics, perishables, liquor) not accepted.<br>I. All statutory taxes extra as applicable.';
+  }
+  if(inv.cc){
+    h+='<br><br><b>B2C Courier Terms:</b><br>A. Freight on higher of actual/volumetric weight.<br>B. COD carries the higher of flat or % of order value.<br>'+
+    'C. Category (City/Region/Metro/ROI/Special) determined from pickup/destination pincode.<br>D. Delivered by the selected courier partner as per their SLA and claims process.<br>'+
+    'E. Prohibited/restricted items not accepted.<br>F. GST @ 18% charged as shown.';
+  }
+  return h+'</div>';
+}
+function renderInvoicePrint(inv){
+  document.getElementById('printableInvoice').innerHTML =
+    '<div class="card"><h2>Invoice '+inv.id+'</h2>'+
+    '<p class="tc">Date: '+(inv.date||'')+' | Booked by: '+esc(inv.by||inv.by_user||'')+'</p>'+
+    '<p><b>Billing Type:</b> '+(inv.custType==='B2B'?'🏢 B2B BULK (Corporate/Vendor)':'🧍 B2C (Retail)')+(inv.gstin?' &nbsp; <b>GSTIN:</b> '+esc(inv.gstin):'')+'</p>'+
+    '<p><b>Customer:</b> '+esc(inv.customer)+' | '+esc(inv.mobile)+'<br>'+esc(inv.addr)+'</p>'+
+    '<p><b>Route:</b> '+esc(inv.pickup)+' → '+esc(inv.dest)+' &nbsp; <b>Weight:</b> '+inv.weight+'kg &nbsp; <b>Pieces:</b> '+inv.pieces+'</p>'+
+    '<p><b>Courier Partner:</b> '+esc(inv.partner)+'</p>'+
+    '<div class="tbl-wrap">'+detailTableHtml(inv)+'</div>'+adminMarginHtml(inv)+termsHtml(inv)+
+    '<div class="row-actions no-print"><button class="btn btn-gold" onclick="window.print()">🖨 Print Invoice</button>'+
+    '<button class="btn btn-navy" onclick="downloadInvoice(\''+inv.id+'\')">⬇ Download Invoice</button></div>'+
+    '<p id="dlMsg" class="tc no-print"></p>'+
+    (/delhivery/i.test(inv.partner||'') ? delhiveryBoxHtml(inv) : '')+
+    '</div>';
+  window.__lastInvoiceForDownload = inv;
+}
+function delhiveryBoxHtml(inv){
+  const wb = inv.extra && inv.extra.delhivery_waybill;
+  if(wb){
+    return '<div class="card no-print" id="dlhvBox" style="background:var(--bg);"><h3>📦 Delhivery</h3><p>Waybill: <b>'+esc(wb)+'</b></p>'+
+      '<div class="row-actions"><button class="btn btn-navy btn-sm" onclick="fetchDelhiveryLabel(\''+esc(wb)+'\')">🏷️ Get Label</button> <button class="btn btn-navy btn-sm" onclick="trackDelhivery(\''+esc(wb)+'\')">📍 Track</button></div><p id="dlhvMsg" class="tc"></p></div>';
+  }
+  const m=String(inv.dest||'').match(/\b\d{6}\b/); const pin=m?m[0]:''; const st=pin?((pinState(pin)||{}).s||''):'';
+  return '<div class="card no-print" id="dlhvBox" style="background:var(--bg);"><h3>📦 Delhivery</h3>'+
+    '<p class="tc">இந்த invoice இன்னும் Delhivery-ல் order ஆக manifest ஆகவில்லை. Destination விவரங்களை சரிபார்க்கவும்.</p>'+
+    '<div class="grid3"><div><label>Destination Pincode</label><input id="dlPin" maxlength="6" value="'+esc(pin)+'"></div><div><label>City</label><input id="dlCity" placeholder="e.g. Bangalore"></div><div><label>State</label><input id="dlState" value="'+esc(st)+'"></div></div>'+
+    '<label>Payment Mode</label><select id="dlPay"><option value="Prepaid">Prepaid</option><option value="COD">COD (invoice total collect)</option></select>'+
+    '<div class="row-actions"><button class="btn btn-gold btn-sm" onclick="createDelhiveryOrder(\''+inv.id+'\')">📦 Auto Order Create (Manifest)</button></div><p id="dlhvMsg" class="tc"></p></div>';
+}
+async function createDelhiveryOrder(invId){
+  const msg=document.getElementById('dlhvMsg'); if(msg) msg.textContent='Creating order with Delhivery...';
+  const v=function(id){ const e=document.getElementById(id); return e?e.value.trim():''; };
+  try{
+    const r=await apiPost('delhivery.php?action=manifest', {invoice_id:invId, dest_pin:v('dlPin'), dest_city:v('dlCity'), dest_state:v('dlState'), payment_mode:v('dlPay')||'Prepaid'});
+    if(r.waybill){
+      showToast('✔ Delhivery order created - Waybill '+r.waybill);
+      const upd=await apiGet('invoices.php?action=get&id='+encodeURIComponent(invId));
+      renderInvoicePrint(normInv(upd.invoice));
+    }else if(msg) msg.textContent='Order submitted, ஆனால் waybill number கிடைக்கவில்லை.';
+  }catch(e){ if(msg) msg.textContent='Failed: '+(typeof e==='string'?e:'Delhivery order create failed.'); }
+}
+async function fetchDelhiveryLabel(wb){
+  const msg=document.getElementById('dlhvMsg'); if(msg) msg.textContent='Fetching label...';
+  try{
+    const r=await apiGet('delhivery.php?action=label&waybill='+encodeURIComponent(wb));
+    const url=r.data && (r.data.packages_list && r.data.packages_list[0] && r.data.packages_list[0].pdf_download);
+    if(url){ window.open(url, '_blank'); if(msg) msg.textContent=''; }
+    else if(msg) msg.textContent='Label URL கிடைக்கவில்லை. Response: '+JSON.stringify(r.data).slice(0,200);
+  }catch(e){ if(msg) msg.textContent='Failed: '+(typeof e==='string'?e:'Label fetch failed.'); }
+}
+async function trackDelhivery(wb){
+  const msg=document.getElementById('dlhvMsg'); if(msg) msg.textContent='Tracking...';
+  try{
+    const r=await apiGet('delhivery.php?action=track&waybill='+encodeURIComponent(wb));
+    const sc = r.data && r.data.ShipmentData && r.data.ShipmentData[0] && r.data.ShipmentData[0].Shipment && r.data.ShipmentData[0].Shipment.Status;
+    if(msg) msg.textContent = sc ? ('Status: '+sc.Status+' ('+sc.StatusDateTime+')') : ('Response: '+JSON.stringify(r.data).slice(0,200));
+  }catch(e){ if(msg) msg.textContent='Failed: '+(typeof e==='string'?e:'Tracking failed.'); }
+}
+function invoiceStandaloneHtml(inv){
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice '+inv.id+'</title>'+
+  '<style>body{font-family:Arial,sans-serif;padding:24px;color:#12182b;}h1{color:#0d2050;}table{border-collapse:collapse;width:100%;margin:12px 0;}th,td{border:1px solid #ccc;padding:6px 10px;text-align:center;}th{background:#0d2050;color:#fff;}.tc{font-size:.82rem;color:#555;line-height:1.5;}</style></head><body>'+
+  '<h1>BCI EXPRESS - Invoice</h1><p><b>Invoice #:</b> '+inv.id+' &nbsp; <b>Date:</b> '+inv.date+' &nbsp; <b>Booked by:</b> '+esc(inv.by||inv.by_user)+'</p>'+
+  '<p><b>Billing Type:</b> '+(inv.custType==='B2B'?'B2B BULK':'B2C')+(inv.gstin?' &nbsp; <b>GSTIN:</b> '+esc(inv.gstin):'')+'</p>'+
+  '<p><b>Customer:</b> '+esc(inv.customer)+' | '+esc(inv.mobile)+'<br>'+esc(inv.addr)+'</p>'+
+  '<p><b>Route:</b> '+esc(inv.pickup)+' &rarr; '+esc(inv.dest)+' &nbsp; <b>Weight:</b> '+inv.weight+'kg</p>'+
+  '<p><b>Courier Partner:</b> '+esc(inv.partner)+'</p>'+detailTableHtml(inv)+termsHtml(inv)+'</body></html>';
+}
+function downloadInvoice(id){
+  const inv=window.__lastInvoiceForDownload; if(!inv||inv.id!==id) return;
+  const html=invoiceStandaloneHtml(inv);
+  const msgEl=document.getElementById('dlMsg');
+  try{
+    const blob=new Blob([html],{type:'text/html'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=inv.id+'.html'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+    if(msgEl) msgEl.textContent='✔ Invoice file downloaded ('+inv.id+'.html).';
+  }catch(e){ if(msgEl) msgEl.textContent='Download failed. "Print" பொத்தானை பயன்படுத்தி "Save as PDF" செய்யவும்.'; }
+}
+
+boot();
+
+// ---------------- WALLET ----------------
+let WALLET_BAL=0;
+async function loadWalletBalance(){
+  if(isAdmin()) return; // admin bookings are not wallet-metered
+  try{ const r=await apiGet('wallet.php?action=balance'); WALLET_BAL=r.balance; document.getElementById('walletBal').textContent='₹'+WALLET_BAL.toFixed(2); document.getElementById('walletWrap').classList.remove('hide'); }
+  catch(e){}
+}
+async function openWallet(){
+  document.getElementById('walletModal').classList.remove('hide');
+  document.getElementById('walletBalBig').textContent='₹'+WALLET_BAL.toFixed(2);
+  document.getElementById('walletErr').textContent='';
+  try{ const r=await apiGet('wallet.php?action=transactions'); renderWalletTx(r.transactions||[]); }catch(e){}
+}
+function closeWallet(){ document.getElementById('walletModal').classList.add('hide'); }
+function renderWalletTx(list){
+  const w=document.getElementById('walletTxWrap');
+  if(!list.length){ w.innerHTML='<p class="tc">No transactions yet.</p>'; return; }
+  let h='<table><tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>';
+  list.forEach(function(t){ h+='<tr><td>'+t.created_at+'</td><td>'+(t.type==='credit'?'🟢 Credit':'🔴 Debit')+'</td><td>₹'+parseFloat(t.amount).toFixed(2)+'</td><td style="text-align:left">'+esc(t.note||'')+'</td></tr>'; });
+  w.innerHTML=h+'</table>';
+}
+async function startRazorpay(){
+  const amt=parseFloat(document.getElementById('rechargeAmt').value)||0;
+  const errEl=document.getElementById('walletErr'); errEl.textContent='';
+  if(amt<1){ errEl.textContent='குறைந்தது ₹1 உள்ளிடவும்.'; return; }
+  let keyInfo, order;
+  try{ keyInfo=await apiGet('wallet.php?action=key'); }catch(e){}
+  if(!keyInfo || !keyInfo.configured){
+    errEl.textContent='Online payment இன்னும் admin set up செய்யவில்லை. Admin-ஐ தொடர்பு கொண்டு manual-ஆக wallet recharge செய்யச் சொல்லவும்.';
+    return;
+  }
+  try{ order=await apiPost('wallet.php?action=create_order', {amount:amt}); }
+  catch(e){ errEl.textContent=typeof e==='string'?e:'Order creation failed.'; return; }
+  const rzp=new Razorpay({
+    key: order.key_id, amount: order.amount, currency: order.currency, order_id: order.order_id,
+    name: 'BCI EXPRESS', description: 'Wallet Recharge',
+    handler: async function(resp){
+      try{
+        await apiPost('wallet.php?action=verify', {razorpay_order_id:resp.razorpay_order_id, razorpay_payment_id:resp.razorpay_payment_id, razorpay_signature:resp.razorpay_signature, amount:amt});
+        await loadWalletBalance(); openWallet();
+        showToast('✔ Wallet recharged ₹'+amt.toFixed(2));
+      }catch(e){ errEl.textContent='Payment verification failed: '+e; }
+    },
+    theme:{color:'#0d2050'}
+  });
+  rzp.open();
+}
+// admin: pending approvals
+async function renderPendingTable(){
+  if(!isAdmin()) return;
+  let rows=[];
+  try{ const r=await apiGet('users.php?action=pending'); rows=r.users||[]; }catch(e){}
+  const tb=document.querySelector('#pendingTable tbody'); tb.innerHTML='';
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="5" style="color:var(--muted);">No pending requests.</td></tr>'; return; }
+  rows.forEach(function(u){
+    tb.innerHTML+='<tr><td>'+esc(u.username)+'</td><td>'+esc(u.email||'-')+'</td><td>'+esc(u.location||'-')+'</td><td>'+u.created_at+'</td>'+
+      '<td class="no-print"><button class="btn btn-gold btn-sm" onclick="approveUser(\''+u.id+'\')">Approve</button> <button class="btn btn-red btn-sm" onclick="rejectUser(\''+u.id+'\')">Reject</button></td></tr>';
+  });
+}
+async function approveUser(id){ await apiPost('users.php?action=approve',{id:id}); await renderPendingTable(); const r=await apiGet('users.php?action=list'); USERS=r.users||[]; renderUserTable(); }
+async function rejectUser(id){ if(!confirm('இந்த account-ஐ reject செய்யவா?'))return; await apiPost('users.php?action=reject',{id:id}); await renderPendingTable(); const r=await apiGet('users.php?action=list'); USERS=r.users||[]; renderUserTable(); }
+async function manualWalletAdjust(id, type){
+  const amt=parseFloat(prompt((type==='credit'?'Credit':'Debit')+' amount (₹):'));
+  if(!amt || amt<=0) return;
+  try{ await apiPost('wallet.php?action=manual_adjust', {user_id:id, amount:amt, type:type, note:'Manual '+type+' by admin'}); }
+  catch(e){ alert(typeof e==='string'?e:'Failed'); return; }
+  const r=await apiGet('users.php?action=list'); USERS=r.users||[]; renderUserTable();
+}
+
+// ---------------- DELHIVERY API STATUS / LIVE RATE CHECK (admin, Rate Master tab) ----------------
+async function loadDelhiveryStatus(){
+  const el=document.getElementById('dlhvStatus'); if(!el)return;
+  loadSystemStatus();
+  try{
+    const r=await apiGet('delhivery.php?action=status');
+    el.innerHTML = r.configured
+      ? '✅ Delhivery API connected. Client: <b>'+esc(r.client||'-')+'</b> | Pickup location: <b>'+esc(r.pickup||'-')+'</b>'
+      : '⚠️ Delhivery API இன்னும் set up ஆகவில்லை. EdgeOne Environment Variables-ல் DELHIVERY_TOKEN, DELHIVERY_CLIENT, DELHIVERY_PICKUP நிரப்பவும்.';
+  }catch(e){ el.textContent='Status check failed.'; }
+}
+async function checkDelhiveryRate(){
+  const res=document.getElementById('dqResult'); res.textContent='Checking...';
+  const o=document.getElementById('dqOpin').value.trim(), d=document.getElementById('dqDpin').value.trim();
+  const wt=document.getElementById('dqWt').value, md=document.getElementById('dqMode').value, pt=document.getElementById('dqPay').value;
+  try{
+    const r=await apiGet('delhivery.php?action=rate&o_pin='+o+'&d_pin='+d+'&cgm='+wt+'&md='+md+'&pt='+encodeURIComponent(pt));
+    res.innerHTML = '<pre style="white-space:pre-wrap;">'+esc(JSON.stringify(r.data, null, 2))+'</pre>';
+  }catch(e){ res.textContent='Failed: '+(typeof e==='string'?e:'Rate check failed.'); }
+}
+
+
+async function refreshUsersTab(){
+  try{ const r=await apiGet('users.php?action=list'); USERS=r.users||[]; renderUserTable(); }catch(e){}
+  renderPendingTable();
+}
+
+// ---------------- FIRST-TIME SETUP + SYSTEM STATUS ----------------
+async function checkSetup(){
+  try{
+    const s=await apiGet('auth.php?action=status');
+    if(s.needsSetup){ document.getElementById('loginView').classList.add('hide'); document.getElementById('registerView').classList.add('hide'); document.getElementById('setupView').classList.remove('hide'); }
+  }catch(e){}
+}
+async function doSetup(){
+  const g=function(id){ return document.getElementById(id).value; };
+  const err=document.getElementById('setErr'); err.textContent='';
+  try{
+    await apiPost('auth.php?action=setup', {setup_key:g('setKey'), username:g('setUser').trim().toLowerCase(), email:g('setEmail').trim(), password:g('setPass')});
+    document.getElementById('setupView').classList.add('hide');
+    await boot();
+  }catch(e){ err.textContent=typeof e==='string'?e:'Setup failed.'; }
+}
+async function loadSystemStatus(){
+  const el=document.getElementById('sysStatus'); if(!el||!isAdmin())return;
+  try{
+    const r=await apiGet('system.php?action=check');
+    const f=function(ok,t){ return (ok?'✅ ':'❌ ')+t; };
+    el.innerHTML=[f(r.kvBound,'KV storage (bci_kv)'),f(r.sessionSecret,'SESSION_SECRET'),f(r.setupKey,'SETUP_KEY'),f(r.razorpay,'Razorpay keys'),f(r.delhivery,'Delhivery token'),f(r.delhiveryClient,'DELHIVERY_CLIENT'),f(r.delhiveryPickup,'DELHIVERY_PICKUP')].join(' &nbsp;|&nbsp; ');
+  }catch(e){ el.textContent='System check failed.'; }
+}
+
+</script>
+</body>
+</html>
