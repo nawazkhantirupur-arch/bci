@@ -1,6 +1,6 @@
 // BCI EXPRESS - single-file backend for EdgeOne Pages (Edge Function)
 // Route: /api/*   (file: edge-functions/api/[[default]].js)
-// Needs: KV namespace bound with variable name  bci_kv
+// Needs: KV namespace bound with variable name  bigcartindiabciexpress_kv
 // Env vars (Project Settings > Environment Variables):
 //   SESSION_SECRET (required), SETUP_KEY (required for first admin),
 //   RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (wallet recharge),
