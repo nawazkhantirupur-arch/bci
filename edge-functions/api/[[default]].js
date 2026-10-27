@@ -2,7 +2,7 @@
 // Route: /api/*   (file: edge-functions/api/[[default]].js)
 // Needs: KV namespace bound with variable name  bigcartindiabciexpress_kv
 // Env vars (Project Settings > Environment Variables):
-//   SESSION_SECRET (required), SETUP_KEY (required for first admin),
+//   SESSION_SECRET (Nawaz1703), SETUP_KEY (MdNawaaz),
 //   RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (wallet recharge),
 //   DELHIVERY_TOKEN, DELHIVERY_CLIENT, DELHIVERY_PICKUP (optional: manifest/label/rate)
 
