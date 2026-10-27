@@ -1,7 +1,7 @@
 // BCI EXPRESS - single-file backend for EdgeOne Pages (Edge Function)
 // Route: /api/*   (file: edge-functions/api/[[default]].js)
 // Needs: bigcartindiabciexpress_kv namespace bound with variable name  bigcartindiabciexpress_kv
-// Env vars (Project Settings > Environment Variables):bigcartindiabciexpress_kv
+// Env vars (Project Settings > Environment Variables):https://bigcartindiabciexpress-dpv23v7s4953.edgeone.dev_kv
 //   SESSION_SECRET_Nawaz1703, SETUP_KEY_MdNawaaz,
 //   RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (wallet recharge),
 //   DELHIVERY_TOKEN, DELHIVERY_CLIENT, DELHIVERY_PICKUP (optional: manifest/label/rate)
